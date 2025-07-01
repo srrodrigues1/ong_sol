@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ong_sol
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: myuser
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  web:
+    build: .
+    command: ./wait-for-it.sh db:3306 -- python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+      - ./wait-for-it.sh:/wait-for-it.sh
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+volumes:
+  db_data:
+

@@ -1,0 +1,238 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'users/css/sidebar_add.css' %}">
+</head>
+</html>
+
+<div id="sidebar" class="sidebar-container">
+
+    <div class="sidebar-overlay"></div> <!-- onclick="closeSidebar() -->
+
+    <div class="sidebar-content">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <h2 id="sidebar-title" class="sidebar-title">Criar Usuário</h2>
+            <button class="btn-close" onclick="closeAddSidebar()"></button>
+        </div>
+
+        <div id="loading-overlay-add" class="loading-overlay" style="display: none">
+            <img src="{% static 'img/loading_icon.gif' %}" alt="Carregando..." width="50">        
+        </div>
+
+        <div id="mensagem-usuario"></div>
+        
+        <div class="sidebar-body">
+            <form id="form-usuario" class="form-usuario" method="post" action="{% url 'criar_usuario' %}">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <label for="username" class="form-label">Nome</label>
+                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" id="username" placeholder="Nome" name="username">
+                </div>
+                <div class="mb-2">
+                    <label for="cpf" class="form-label">CPF</label>
+                    <input type="text" onkeydown="removeRequiredStyle(this)" onkeyup="formatarCPF()" class="form-control" id="cpf" placeholder="CPF" name="cpf">
+                </div>
+                <div class="mb-2">
+                    <label for="email" class="form-label">E-mail</label>
+                    <input type="email" onkeydown="removeRequiredStyle(this)" class="form-control" id="email" placeholder="E-mail" name="email">
+                </div>
+                <div class="mb-2">
+                    <label for="password" class="form-label">Senha</label>
+                    <input type="password" onkeydown="removeRequiredStyle(this)" class="form-control" id="senha" placeholder="Senha" name="password">
+                </div>
+                <div class="mb-2">
+                    <label for="funcao" class="form-label">Função</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" id="funcao" name="funcao">
+                        <option value="1">Administrador</option>
+                        <option value="2" selected>Usuário</option>
+                    </select>
+                </div>
+
+                <div class="form-buttons d-flex justify-content-end mt-4">
+                    <button id="btn-cancelar-add" type="button" class="btn btn-outline-success me-2" onclick="closeAddSidebar()">Cancelar</button>
+                    <button id="btn-salvar-add" type="submit" class="btn btn-success">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+
+document.getElementById('form-usuario').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+    console.log("add");
+
+    handleFormOnSave();
+    console.log(form);
+    if (validateFormAdd(form) > 0) {
+        handleFormOnResponse(0);
+        return;
+    }
+
+    toastr.options.closeButton = true;
+    toastr.options.timeOut = 400000;
+    toastr.options.progressBar = true;
+    toastr.options.extendedTimeOut = 0;
+    toastr.options.preventDuplicates = true;
+
+    const formData = new FormData(form);
+    
+    fetch('/users/novo', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        handleFormOnResponse(1);
+        // Verifica se a resposta é JSON ou HTML
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } else {
+            // Se o backend retornou HTML, faça o redirecionamento
+            window.location.href = '/users';
+            return;
+        }
+        })
+    .then(data => {
+        if (!data) return;  // Se redirecionou, nada a fazer
+
+        const mensagemDiv = document.getElementById('mensagem-usuario');
+        mensagemDiv.innerHTML = '';
+
+        if (data.success) {
+            // Redireciona se a resposta contém a URL
+            if (data.redirect_url) {
+                window.location.href = data.redirect_url;
+            } else {
+                form.reset();
+                closeSidebar();
+            }
+        } else if (data.error) {
+            let listaErros = '';
+
+            for (let campo in data.error) {
+                listaErros += ' - ' + data.error[campo] + '<br>'
+                const campoEl = document.getElementById(campo);
+                if (campoEl) {
+                    campoEl.style.borderColor = '#eb0000';
+                }
+            }
+            toastr.warning(listaErros);
+        }
+    })
+    .catch(error => {
+        // console.error('Erro:', error);
+    });
+
+});
+
+function removeRequiredStyle(input) {
+    input.style = 'border-color: #ced4da';
+}
+
+function resetForm(form) {
+    form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
+    form.find("select").prop("selectedIndex", 0);
+    $("#username").css("border-color", "#ced4da");
+    $("#cpf").css("border-color", "#ced4da");
+    $("#email").css("border-color", "#ced4da");
+    $("#senha").css("border-color", "#ced4da");
+    $("#funcao").css("border-color", "#ced4da");
+}
+
+function validateFormAdd(form) {
+
+    let invalid = 0;
+    const username = form.username.value.trim();
+    const cpf = form.cpf.value.trim();
+    const email = form.email.value.trim();
+    const senha = form.password.value.trim();
+    // const status = form.status.value;
+    const funcao = form.funcao.value;
+
+    if (!username) {
+        form.username.style = 'border-color: #eb0000';
+        invalid += 1;
+    }
+    if (!cpf) {
+        form.cpf.style = 'border-color: #eb0000';
+        invalid += 1;
+    }
+    if (!email) {
+        form.email.style = 'border-color: #eb0000';
+        invalid += 1;
+    }
+    if (!senha) {
+        form.senha.style = 'border-color: #eb0000';
+        invalid += 1;
+    }
+    // if (!status) {
+    //     form.status.style = 'border-color: #eb0000';
+    //     invalid += 1;
+    // }
+    if (!funcao) {
+        form.funcao.style = 'border-color: #eb0000';
+        invalid += 1;
+    }
+    return invalid;
+}
+
+function openAddSidebar() {
+    document.getElementById('sidebar').classList.add('active');
+}
+
+function closeAddSidebar() {
+    let form = $('#form-usuario');
+    resetForm(form);
+
+    document.getElementById('sidebar').classList.remove('active');
+}
+
+function formatarCPF() {
+    const cpfInput = document.getElementById("cpf");
+    let cpf = cpfInput.value.replace(/\D/g, ''); // Remove não-números
+
+    if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
+
+    let cpfFormatado = '';
+
+    if (cpf.length > 9) {
+        cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+    } else if (cpf.length > 6) {
+        cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+    } else if (cpf.length > 3) {
+        cpfFormatado = cpf.replace(/(\d{3})(\d{0,3})/, "$1.$2");
+    } else {
+        cpfFormatado = cpf;
+    }
+
+    cpfInput.value = cpfFormatado;
+}
+
+function handleFormOnSave() {
+    $("#loading-overlay-add").show();
+    $("#btn-cancelar-add").prop("disabled", true);
+    $("#btn-salvar-add").prop("disabled", true);
+}
+
+function handleFormOnResponse(serverSideValidation) {
+
+    if (serverSideValidation == 1) {
+        setTimeout(function() {
+            $("#loading-overlay-add").hide();
+            $("#btn-cancelar-add").prop("disabled", false);
+            $("#btn-salvar-add").prop("disabled", false);        
+        }, 500);
+
+        return;
+    } 
+    $("#loading-overlay-add").hide();
+    $("#btn-cancelar-add").prop("disabled", false);
+    $("#btn-salvar-add").prop("disabled", false);    
+}
+
+</script>

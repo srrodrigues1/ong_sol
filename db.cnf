@@ -1,0 +1,7 @@
+[client]
+database = ong_sol
+user = myuser
+host = db
+password = myuser
+port = 3306
+default-character-set = utf8mb4
