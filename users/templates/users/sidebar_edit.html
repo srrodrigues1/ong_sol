@@ -140,7 +140,7 @@
 
                 for (let campo in data.error) {
                     listaErros += ' - ' + data.error[campo] + '<br>'
-                    const campoEl = document.getElementById(campo + "_edit");
+                    const campoEl = document.getElementById(campo + "-");
                     if (campoEl) {
                         campoEl.style.borderColor = '#eb0000';
                     }
@@ -208,7 +208,7 @@
 
     function closeEditSidebar() {
         let form = $('#form-usuario-edit');
-        resetForm(form);
+        resetFormEdit(form);
 
         document.getElementById('sidebar-edit').classList.remove('active');
     }

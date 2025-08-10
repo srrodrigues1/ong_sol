@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
 import re
 
 def validar_senha(senha):
@@ -81,6 +82,7 @@ def dados_usuario(request, user_id):
     except User.DoesNotExist:
         return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
 
+@require_POST
 def atualizar_usuario(request, user_id):
     if request.method == 'POST':
         username = request.POST.get('username')

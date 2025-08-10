@@ -12,6 +12,35 @@
 </head>
 <body class="body-users">
 
+        <!-- === MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ================================ -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-sm">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmLabel">
+                <i class="fa fa-triangle-exclamation text-danger me-2"></i>
+                Confirmar exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <!-- O nome do usuário a excluir é preenchido via JS -->
+            <div class="modal-body">
+                Tem certeza de que deseja excluir o usuário <strong id="delete-username">...</strong>?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                <i class="fa fa-trash me-1"></i> Excluir
+                </button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===================================================================== -->
+
+
     <div class="d-flex">
 
         {% include 'menu.html' %}
@@ -25,7 +54,7 @@
             <div class="alert-container">
                 {% for message in messages %}
                     {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-                        toastr.success({{message}});
+                        <!-- <script>  toastr.success({{ message }});</script> -->
 
                     {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
                         toastr.warning({{message}});
@@ -152,6 +181,53 @@
                 .catch(error => console.error('Erro ao buscar dados do usuário:', error));
         });
         });
+
+        // ---------------------------------------------------------------------
+        // Confirmação de exclusão
+        // ---------------------------------------------------------------------
+        let deleteUserId = null;          // guarda o ID da linha clicada
+        const deleteModalEl = document.getElementById('deleteConfirmModal');
+        const deleteModal   = new bootstrap.Modal(deleteModalEl);
+
+        $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
+            e.preventDefault();
+
+            // pega dados da linha clicada
+            const $row     = $(this).closest('tr');
+            deleteUserId   = $row.data('id');
+            const username = $row.children('td').eq(0).text();
+
+            // injeta nome no modal e exibe
+            $('#delete-username').text(username);
+            deleteModal.show();
+        });
+
+        // botão "Excluir" dentro do modal
+        $('#btn-confirm-delete').on('click', function () {
+            if (!deleteUserId) return;
+
+            // --- Exemplo usando fetch para POST /users/delete/<id>/ -----------
+            fetch(`/users/delete/${deleteUserId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'  // aproveita o token do Django
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Erro na exclusão');
+
+                // remove a linha da tabela sem recarregar
+                $('#tabela-usuarios').bootstrapTable('remove', {
+                    field: 'id',
+                    values: [deleteUserId]
+                });
+
+                toastr.success('Usuário removido com sucesso');
+                deleteModal.hide();
+            })
+            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+        });
+
     </script>
 </body>
 </html>
