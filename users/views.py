@@ -132,3 +132,37 @@ def atualizar_usuario(request, user_id):
         return redirect('/users')  # ou ajuste conforme a sua URL
 
     return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+# views.py
+from django.contrib import messages
+from django.db.models import ProtectedError
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.views.decorators.http import require_POST
+
+from .models import User   # ajuste o import conforme a sua estrutura
+
+
+@require_POST
+def excluir_usuario(request, user_id):
+    usuario = get_object_or_404(User, id=user_id)
+
+    if usuario == request.user:
+        return JsonResponse({'error': 'Você não pode excluir a si mesmo.'}, status=400)
+    if usuario.is_superuser:
+        return JsonResponse({'error': 'Não é permitido excluir um superusuário.'}, status=400)
+
+    try:
+        nome = usuario.username
+        usuario.delete()
+
+        messages.success(request, f"Usuário '{nome}' excluído com sucesso!")
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+
+        return redirect('/users')
+
+    except ProtectedError:
+        msg = 'Não foi possível excluir este usuário: existem registros vinculados a ele.'
+        return JsonResponse({'error': msg}, status=400)
