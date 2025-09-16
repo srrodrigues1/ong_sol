@@ -50,19 +50,6 @@
         <div id="sidebar-content"></div>
         <div id="sidebar-edit-content"></div>
 
-        {% if messages %}
-            <div class="alert-container">
-                {% for message in messages %}
-                    {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-                        <!-- <script>  toastr.success({{ message }});</script> -->
-
-                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                        toastr.warning({{message}});
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% endif %}
-
         <div class="content flex-grow-1 p-4">
             <div class="container">
                 <div>
@@ -92,21 +79,21 @@
                         <tbody>
                             {% for user in users %}
                             <tr data-id="{{ user.id }}">
-                                <td title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
-                                <td title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
-                                <td title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
+                                <td class="user-row" title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
+                                <td class="user-row" title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
+                                <td class="user-row" title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
                                 <td>
-                                    {% if user.funcao_id == 1 %}
-                                        Administrador
+                                    {% if user.role_id == 1 %}
+                                        <div class="user-admin">Administrador</div>
                                     {% else %}
-                                        Usuário
+                                        <div class="user-normal">Usuário</div>
                                     {% endif %}
                                 </td>
                                 <td>
                                     {% if user.status == 1 %}
-                                        Ativo
+                                        <div class="user-active">Ativo</div>
                                     {% else %}
-                                        Inativo
+                                        <div class="user-inactive">Inativo</div>
                                     {% endif %}
                                 </td>
                                 <td>{{ user.create_date|date:"d/m/Y" }}</td>

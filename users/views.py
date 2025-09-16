@@ -64,8 +64,6 @@ def criar_usuario(request):
         senha_hash = make_password(senha)
         funcao = Role.objects.get(id = funcao_id) if funcao_id else None
 
-        messages.success(request, f"Usuário '{username}' criado com sucesso!")
-
         User.objects.create(
             username=username,
             cpf=cpf,
