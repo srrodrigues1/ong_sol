@@ -18,8 +18,8 @@
             <div class="modal-content shadow-sm">
             <div class="modal-header">
                 <h5 class="modal-title" id="deleteConfirmLabel">
-                <i class="fa fa-triangle-exclamation text-danger me-2"></i>
-                Confirmar exclusão
+                    <i class="fa fa-triangle-exclamation text-danger me-2"></i>
+                    Confirmar exclusão
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
@@ -75,51 +75,50 @@
                     <button class="btn btn-outline-secondary ms-2">Exportar dados</button>
                 </div>
 
-                <table id="tabela-usuarios"
-                       class="table table-hover table-bordered table-striped align-middle table-sm"
-                       data-pagination="true"
-                       data-page-list="[10]"
-                       data-pagination-loop="false">
-                    <thead class="table-light">
-                        <tr>
-                            <th data-field="username" class="td-truncate" data-width="70" data-sortable="true">Usuário</th>
-                            <th data-field="cpf" class="td-truncate" data-width="50" data-sortable="true">CPF</th>
-                            <th data-field="email" class="td-truncate" data-width="100" data-sortable="true">E-mail</th>
-                            <th data-field="funcao" class="td-truncate" data-width="50" data-sortable="true">Função</th>
-                            <th data-field="status" class="td-truncate" data-width="30" data-sortable="true">Status</th>
-                            <th data-field="data_criacao" class="td-truncate" data-width="40" data-sortable="true">Dt. Criação</th>
-                            <th data-field="acoes" class="td-truncate" data-width="35">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr data-id="{{ user.id }}">
-                            <td title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
-                            <td title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
-                            <td title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
-                            <td>
-                                {% if user.funcao_id == 1 %}
-                                    Administrador
-                                {% else %}
-                                    Usuário
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if user.status == 1 %}
-                                    Ativo
-                                {% else %}
-                                    Inativo
-                                {% endif %}
-                            </td>
-                            <td>{{ user.create_date|date:"d/m/Y" }}</td>
-                            <td>
-                                <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
-                                <a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div id="hide-table" style="visibility: hidden">
+                    <table id="tabela-usuarios"
+                        class="table table-hover table-bordered table-striped align-middle table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th data-field="username" class="td-truncate" data-width="70" data-sortable="true">Nome</th>
+                                <th data-field="cpf" class="td-truncate" data-width="50" data-sortable="true">CPF</th>
+                                <th data-field="email" class="td-truncate" data-width="100" data-sortable="true">E-mail</th>
+                                <th data-field="funcao" class="td-truncate" data-width="50" data-sortable="true">Função</th>
+                                <th data-field="status" class="td-truncate" data-width="30" data-sortable="true">Status</th>
+                                <th data-field="data_criacao" class="td-truncate" data-width="40" data-sortable="true">Dt. Criação</th>
+                                <th data-field="acoes" class="td-truncate" data-width="35">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr data-id="{{ user.id }}">
+                                <td title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
+                                <td title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
+                                <td title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
+                                <td>
+                                    {% if user.funcao_id == 1 %}
+                                        Administrador
+                                    {% else %}
+                                        Usuário
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.status == 1 %}
+                                        Ativo
+                                    {% else %}
+                                        Inativo
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.create_date|date:"d/m/Y" }}</td>
+                                <td>
+                                    <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
+                                    <a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -140,8 +139,13 @@
         }
         
         $(document).ready(function() {
-
+            $("#hide-table").css("visibility", "visible");
             $('#tabela-usuarios').bootstrapTable({
+                pagination: true,
+                search: true,
+                showLoading: true,
+                pageList: [10],
+                paginationLoop: false,
                 locale: 'pt-BR',
                 formatShowingRows: function (pageFrom, pageTo, totalRows) {
                     return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
@@ -156,76 +160,76 @@
             });
             initTooltips();
 
-        $('#tabela-usuarios').on('click', 'a.text-primary', function () {
-            event.preventDefault();
-            
-            const userId = $(this).closest('tr').data('id');
-            if (!userId) return;
+            $('#tabela-usuarios').on('click', 'a.text-primary', function () {
+                event.preventDefault();
+                
+                const userId = $(this).closest('tr').data('id');
+                if (!userId) return;
 
-            fetch(`/users/${userId}`)
-                .then(response => response.json())
-                .then(data => {
-                    $('#sidebar-title-edit').text(data.username);
-                    document.getElementById('id_edit').value = data.id;
-                    document.getElementById('username_edit').value = data.username;
-                    document.getElementById('cpf_edit').value = data.cpf;
-                    document.getElementById('email_edit').value = data.email;
-                    document.getElementById('senha_edit').value = ".......";
-                    document.getElementById('status_edit').value = data.status;
-                    document.getElementById('funcao_edit').value = data.funcao;
+                fetch(`/users/${userId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        $('#sidebar-title-edit').text(data.username);
+                        document.getElementById('id_edit').value = data.id;
+                        document.getElementById('username_edit').value = data.username;
+                        document.getElementById('cpf_edit').value = data.cpf;
+                        document.getElementById('email_edit').value = data.email;
+                        document.getElementById('senha_edit').value = ".......";
+                        document.getElementById('status_edit').value = data.status;
+                        document.getElementById('funcao_edit').value = data.funcao;
 
-                    document.getElementById('sidebar-title').innerText = "Editar Usuário";
+                        document.getElementById('sidebar-title').innerText = "Editar Usuário";
 
-                    openEditSidebar();
+                        openEditSidebar();
+                    })
+                    .catch(error => console.error('Erro ao buscar dados do usuário:', error));
+            });
+
+            // ---------------------------------------------------------------------
+            // Confirmação de exclusão
+            // ---------------------------------------------------------------------
+            let deleteUserId = null;          // guarda o ID da linha clicada
+            const deleteModalEl = document.getElementById('deleteConfirmModal');
+            const deleteModal   = new bootstrap.Modal(deleteModalEl);
+
+            $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
+                e.preventDefault();
+
+                // pega dados da linha clicada
+                const $row     = $(this).closest('tr');
+                deleteUserId   = $row.data('id');
+                const username = $row.children('td').eq(0).text();
+
+                // injeta nome no modal e exibe
+                $('#delete-username').text(username);
+                deleteModal.show();
+            });
+
+            // botão "Excluir" dentro do modal
+            $('#btn-confirm-delete').on('click', function () {
+                if (!deleteUserId) return;
+
+                // --- Exemplo usando fetch para POST /users/delete/<id>/ -----------
+                fetch(`/users/delete/${deleteUserId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'  // aproveita o token do Django
+                    }
                 })
-                .catch(error => console.error('Erro ao buscar dados do usuário:', error));
-        });
-        });
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro na exclusão');
 
-        // ---------------------------------------------------------------------
-        // Confirmação de exclusão
-        // ---------------------------------------------------------------------
-        let deleteUserId = null;          // guarda o ID da linha clicada
-        const deleteModalEl = document.getElementById('deleteConfirmModal');
-        const deleteModal   = new bootstrap.Modal(deleteModalEl);
+                    // remove a linha da tabela sem recarregar
+                    $('#tabela-usuarios').bootstrapTable('remove', {
+                        field: 'id',
+                        values: [deleteUserId]
+                    });
 
-        $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
-            e.preventDefault();
-
-            // pega dados da linha clicada
-            const $row     = $(this).closest('tr');
-            deleteUserId   = $row.data('id');
-            const username = $row.children('td').eq(0).text();
-
-            // injeta nome no modal e exibe
-            $('#delete-username').text(username);
-            deleteModal.show();
-        });
-
-        // botão "Excluir" dentro do modal
-        $('#btn-confirm-delete').on('click', function () {
-            if (!deleteUserId) return;
-
-            // --- Exemplo usando fetch para POST /users/delete/<id>/ -----------
-            fetch(`/users/delete/${deleteUserId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'  // aproveita o token do Django
-                }
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Erro na exclusão');
-
-                // remove a linha da tabela sem recarregar
-                $('#tabela-usuarios').bootstrapTable('remove', {
-                    field: 'id',
-                    values: [deleteUserId]
-                });
-
-                toastr.success('Usuário removido com sucesso');
-                deleteModal.hide();
-            })
-            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+                    toastr.success('Usuário removido com sucesso');
+                    deleteModal.hide();
+                })
+                .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+            });
         });
 
     </script>

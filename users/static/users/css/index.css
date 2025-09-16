@@ -4,7 +4,6 @@ body.body-users {
 }
 
 .container {
-    height: 80vh;
     background: #ffffff;
     padding: 20px;
     border-radius: 12px;
@@ -169,6 +168,7 @@ table.table-sm thead tr th {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    height: 286px;
     border: 1px solid #dee2e6; /* Borda externa da tabela */
 }
 

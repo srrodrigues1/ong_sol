@@ -74,8 +74,7 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
     }
 
     toastr.options.closeButton = true;
-    toastr.options.timeOut = 400000;
-    toastr.options.progressBar = true;
+    toastr.options.timeOut = 10000;
     toastr.options.extendedTimeOut = 0;
     toastr.options.preventDuplicates = true;
 
@@ -87,30 +86,17 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
     })
     .then(response => {
         handleFormOnResponse(1);
-        // Verifica se a resposta é JSON ou HTML
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return response.json();
-        } else {
-            // Se o backend retornou HTML, faça o redirecionamento
-            window.location.href = '/users';
-            return;
-        }
-        })
+    })
     .then(data => {
-        if (!data) return;  // Se redirecionou, nada a fazer
+        if (!data) return;
 
         const mensagemDiv = document.getElementById('mensagem-usuario');
         mensagemDiv.innerHTML = '';
 
         if (data.success) {
-            // Redireciona se a resposta contém a URL
-            if (data.redirect_url) {
-                window.location.href = data.redirect_url;
-            } else {
-                form.reset();
-                closeSidebar();
-            }
+            form.reset();
+            closeAddSidebar();
+            toastr.warning(data.success);
         } else if (data.error) {
             let listaErros = '';
 
@@ -146,39 +132,34 @@ function resetForm(form) {
 
 function validateFormAdd(form) {
 
-    let invalid = 0;
     const username = form.username.value.trim();
     const cpf = form.cpf.value.trim();
     const email = form.email.value.trim();
     const senha = form.password.value.trim();
-    // const status = form.status.value;
     const funcao = form.funcao.value;
 
     if (!username) {
         form.username.style = 'border-color: #eb0000';
-        invalid += 1;
+        return 1;
     }
     if (!cpf) {
         form.cpf.style = 'border-color: #eb0000';
-        invalid += 1;
+        return 1;
     }
     if (!email) {
         form.email.style = 'border-color: #eb0000';
-        invalid += 1;
+        return 1;
     }
     if (!senha) {
         form.senha.style = 'border-color: #eb0000';
-        invalid += 1;
+        return 1;
     }
-    // if (!status) {
-    //     form.status.style = 'border-color: #eb0000';
-    //     invalid += 1;
-    // }
     if (!funcao) {
         form.funcao.style = 'border-color: #eb0000';
-        invalid += 1;
+        return 1;
     }
-    return invalid;
+
+    return 0;
 }
 
 function openAddSidebar() {
