@@ -99,6 +99,7 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
         if (data.success) {
             form.reset();
             toastr.success(data.success);
+            atualizarTabelaUsuarios();
             closeAddSidebar();
         } else if (data.error) {
             let listaErros = '';
