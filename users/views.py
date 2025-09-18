@@ -4,8 +4,11 @@ from django.contrib import messages
 from django.urls import reverse
 from django.db.models import ProtectedError
 from django.http import JsonResponse
+from django.http import HttpResponse
 from django.views.decorators.http import require_POST
 from functools import wraps
+
+import csv
 import re
 
 def login_required(view_func):
@@ -17,9 +20,8 @@ def login_required(view_func):
     return _wrapped_view
 
 def validar_senha(senha):
-    tem_letra = re.search(r'[a-zA-Z]', senha)
-    tem_numero = re.search(r'\d', senha)
-    return len(senha) >= 6 and tem_letra and tem_numero
+    tem_especial = re.search(r'[^a-zA-Z0-9]', senha) 
+    return len(senha) >= 6 and tem_especial
 
 from .models import User, Role
 
@@ -122,7 +124,7 @@ def atualizar_usuario(request, user_id):
 
         if senha:
             if not validar_senha(senha):
-                erros["senha"] = "A senha deve ter no mínimo 6 caracteres e conter letras e números."
+                erros["senha"] = "A senha deve ter no mínimo 6 caracteres e conter um caractere especial"
 
         if erros:
             return JsonResponse({'error': erros}, status=400)
@@ -165,9 +167,19 @@ def excluir_usuario(request, user_id):
         return JsonResponse({'error': msg}, status=400)
 
 @login_required
-def listar_usuarios(request):
-    users = User.objects.all().order_by("id").values("id", "username", "email", "cpf", "status", "role__name")
-    return JsonResponse(list(users), safe=False)
+def exportar_usuario_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="usuarios.csv"'
+
+    writer = csv.writer(response)
+
+    writer.writerow(["ID", "Username", "Email", "CPF", "Status", "Função"])
+
+    users = User.objects.all().order_by("id").values_list("id", "username", "email", "cpf", "status", "role__name")
+    for user in users:
+        writer.writerow(user)
+
+    return response
 
 @login_required
 def usuarios_parciais(request):

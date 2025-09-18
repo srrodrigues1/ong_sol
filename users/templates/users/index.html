@@ -32,7 +32,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-danger" id="btn-confirm-delete">
-                <i class="fa fa-trash me-1"></i> Excluir
+                    <i class="fa fa-trash me-1"></i> Excluir
                 </button>
             </div>
             </div>
@@ -59,7 +59,7 @@
                     <button class="btn btn-add" onclick="openAddSidebar()">
                         <i class="fa fa-plus"></i> Adicionar
                     </button>
-                    <button class="btn btn-outline-secondary ms-2">Exportar dados</button>
+                    <button class="btn btn-outline-secondary ms-2" id="exportar-dados">Exportar dados</button>
                 </div>
 
                 <div id="hide-table" style="visibility: hidden">
@@ -172,7 +172,33 @@
             })
             .catch(() => toastr.error('Não foi possível excluir o usuário.'));
         });
-    });
+
+        $('#exportar-dados').on('click', function() {
+            fetch(`/users/list`, {
+                method: 'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao exportar usuários");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "usuarios.csv"; // nome do arquivo baixado
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Falha ao baixar o CSV.");
+            });
+                })
+            });
 
     async function atualizarTabelaUsuarios() {
         const response = await fetch("{% url 'usuarios_parciais' %}");
