@@ -10,7 +10,7 @@ services:
       MYSQL_USER: myuser
       MYSQL_PASSWORD: myuser
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - db_data:/var/lib/mysql
 
@@ -22,7 +22,7 @@ services:
       - ./wait-for-it.sh:/wait-for-it.sh
     working_dir: /app
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     depends_on:
       - db
 
