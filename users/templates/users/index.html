@@ -50,19 +50,6 @@
         <div id="sidebar-content"></div>
         <div id="sidebar-edit-content"></div>
 
-        {% if messages %}
-            <div class="alert-container">
-                {% for message in messages %}
-                    {% if message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
-                        <!-- <script>  toastr.success({{ message }});</script> -->
-
-                    {% elif message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
-                        toastr.warning({{message}});
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% endif %}
-
         <div class="content flex-grow-1 p-4">
             <div class="container">
                 <div>
@@ -76,48 +63,7 @@
                 </div>
 
                 <div id="hide-table" style="visibility: hidden">
-                    <table id="tabela-usuarios"
-                        class="table table-hover table-bordered table-striped align-middle table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th data-field="username" class="td-truncate" data-width="70" data-sortable="true">Nome</th>
-                                <th data-field="cpf" class="td-truncate" data-width="50" data-sortable="true">CPF</th>
-                                <th data-field="email" class="td-truncate" data-width="100" data-sortable="true">E-mail</th>
-                                <th data-field="funcao" class="td-truncate" data-width="50" data-sortable="true">Função</th>
-                                <th data-field="status" class="td-truncate" data-width="30" data-sortable="true">Status</th>
-                                <th data-field="data_criacao" class="td-truncate" data-width="40" data-sortable="true">Dt. Criação</th>
-                                <th data-field="acoes" class="td-truncate" data-width="35">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for user in users %}
-                            <tr data-id="{{ user.id }}">
-                                <td title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
-                                <td title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
-                                <td title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
-                                <td>
-                                    {% if user.funcao_id == 1 %}
-                                        Administrador
-                                    {% else %}
-                                        Usuário
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if user.status == 1 %}
-                                        Ativo
-                                    {% else %}
-                                        Inativo
-                                    {% endif %}
-                                </td>
-                                <td>{{ user.create_date|date:"d/m/Y" }}</td>
-                                <td>
-                                    <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
-                                    <a href="#" class="text-danger"><i class="fa fa-trash"></i></a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    {% include 'users/tabela_usuarios.html' %}
                 </div>
             </div>
         </div>
@@ -128,6 +74,9 @@
     <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
     <script>
+
+        var DELETE_MODAL;
+
         function initTooltips() {
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
             tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -135,22 +84,14 @@
                     delay: { "show": 500, "hide": 100 }
                 });
             });
-
         }
-        
-        $(document).ready(function() {
-            $("#hide-table").css("visibility", "visible");
+
+        function loadTableEvents() {
             $('#tabela-usuarios').bootstrapTable({
-                pagination: true,
-                search: true,
-                showLoading: true,
-                pageList: [10],
-                paginationLoop: false,
-                locale: 'pt-BR',
                 formatShowingRows: function (pageFrom, pageTo, totalRows) {
                     return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
-                }
-                
+                },
+                locale: 'pt-BR'
             });
             $('#tabela-usuarios').on('post-body.bs.table', function () {
                 initTooltips();
@@ -184,15 +125,8 @@
                     })
                     .catch(error => console.error('Erro ao buscar dados do usuário:', error));
             });
-
-            // ---------------------------------------------------------------------
-            // Confirmação de exclusão
-            // ---------------------------------------------------------------------
-            let deleteUserId = null;          // guarda o ID da linha clicada
-            const deleteModalEl = document.getElementById('deleteConfirmModal');
-            const deleteModal   = new bootstrap.Modal(deleteModalEl);
-
             $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
+                console.log("excl");
                 e.preventDefault();
 
                 // pega dados da linha clicada
@@ -202,8 +136,23 @@
 
                 // injeta nome no modal e exibe
                 $('#delete-username').text(username);
-                deleteModal.show();
+                DELETE_MODAL.show();
             });
+        }
+        
+        $(document).ready(function() {
+
+            
+            atualizarTabelaUsuarios();
+            $("#hide-table").css("visibility", "visible");
+
+            // ---------------------------------------------------------------------
+            // Confirmação de exclusão
+            // ---------------------------------------------------------------------
+            let deleteUserId = null;          // guarda o ID da linha clicada
+            const deleteModalEl = document.getElementById('deleteConfirmModal');
+            const deleteModal   = new bootstrap.Modal(deleteModalEl);
+            DELETE_MODAL = deleteModal;
 
             // botão "Excluir" dentro do modal
             $('#btn-confirm-delete').on('click', function () {
@@ -231,6 +180,14 @@
                 .catch(() => toastr.error('Não foi possível excluir o usuário.'));
             });
         });
+
+        async function atualizarTabelaUsuarios() {
+            let response = await fetch("{% url 'usuarios_parciais' %}");
+            let html = await response.text();
+            document.querySelector("#hide-table").innerHTML = html;
+
+            loadTableEvents();
+        }
 
     </script>
 </body>

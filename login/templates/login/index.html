@@ -170,7 +170,7 @@ document.getElementById('form-login').addEventListener('submit', function(e) {
   }).then(response => response.json()
   ).then(data => {
     if (data.success) {
-      toastr.warning("teste 1");
+      window.location.href = '/users';
     } else {
       toastr.error(data.message);
     }

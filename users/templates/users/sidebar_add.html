@@ -27,7 +27,7 @@
             <form id="form-usuario" class="form-usuario" method="post" action="{% url 'criar_usuario' %}">
                 {% csrf_token %}
                 <div class="mb-2">
-                    <label for="username" class="form-label">Nome</label>
+                    <label for="username" class="form-label">Nome Completo</label>
                     <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" id="username" placeholder="Nome" name="username">
                 </div>
                 <div class="mb-2">
@@ -45,8 +45,8 @@
                 <div class="mb-2">
                     <label for="funcao" class="form-label">Função</label>
                     <select onchange="removeRequiredStyle(this)" class="form-select" id="funcao" name="funcao">
-                        <option value="1">Administrador</option>
                         <option value="2" selected>Usuário</option>
+                        <option value="1">Administrador</option>
                     </select>
                 </div>
 
@@ -64,7 +64,6 @@
 document.getElementById('form-usuario').addEventListener('submit', function(e) {
     e.preventDefault();
     const form = e.target;
-    console.log("add");
 
     handleFormOnSave();
     console.log(form);
@@ -86,6 +85,10 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
     })
     .then(response => {
         handleFormOnResponse(1);
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json();
+        } 
     })
     .then(data => {
         if (!data) return;
@@ -95,8 +98,9 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
 
         if (data.success) {
             form.reset();
+            toastr.success(data.success);
+            atualizarTabelaUsuarios();
             closeAddSidebar();
-            toastr.warning(data.success);
         } else if (data.error) {
             let listaErros = '';
 
@@ -206,11 +210,12 @@ function handleFormOnResponse(serverSideValidation) {
         setTimeout(function() {
             $("#loading-overlay-add").hide();
             $("#btn-cancelar-add").prop("disabled", false);
-            $("#btn-salvar-add").prop("disabled", false);        
+            $("#btn-salvar-add").prop("disabled", false);   
         }, 500);
 
         return;
-    } 
+    }
+
     $("#loading-overlay-add").hide();
     $("#btn-cancelar-add").prop("disabled", false);
     $("#btn-salvar-add").prop("disabled", false);    

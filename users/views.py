@@ -64,8 +64,6 @@ def criar_usuario(request):
         senha_hash = make_password(senha)
         funcao = Role.objects.get(id = funcao_id) if funcao_id else None
 
-        messages.success(request, f"Usuário '{username}' criado com sucesso!")
-
         User.objects.create(
             username=username,
             cpf=cpf,
@@ -141,9 +139,7 @@ def atualizar_usuario(request, user_id):
             usuario.role = Role.objects.get(id=funcao_id)
 
         usuario.save()
-
-        messages.success(request, f"Usuário '{username}' atualizado com sucesso!")
-        return redirect('/users')  # ou ajuste conforme a sua URL
+        return JsonResponse({'success': f"Usuário {username} atualizado com sucesso!"})
 
     return JsonResponse({'error': 'Método não permitido'}, status=405)
 
@@ -161,13 +157,24 @@ def excluir_usuario(request, user_id):
         nome = usuario.username
         usuario.delete()
 
-        messages.success(request, f"Usuário '{nome}' excluído com sucesso!")
-
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
 
-        return redirect('/users')
+        return JsonResponse({'success': f"Usuário {usuario.username} excluído com sucesso!"})
 
     except ProtectedError:
         msg = 'Não foi possível excluir este usuário: existem registros vinculados a ele.'
         return JsonResponse({'error': msg}, status=400)
+
+@login_required
+def listar_usuarios(request):
+    users = User.objects.all().order_by("id").values("id", "username", "email", "cpf", "status", "role__name")
+    return JsonResponse(list(users), safe=False)
+
+@login_required
+def usuarios_parciais(request):
+    users = User.objects.all().order_by("id")
+    return render(request, 'users/tabela_usuarios.html', {
+        'users': users
+    })
+

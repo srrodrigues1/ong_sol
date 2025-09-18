@@ -166,6 +166,7 @@ table.table-sm thead tr th {
     table-layout: fixed;
     flex-grow: 1;
     width: 100%;
+    border-radius: 3px;
     border-collapse: separate;
     border-spacing: 0;
     height: 286px;
@@ -217,4 +218,44 @@ table.table-sm thead tr th {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.user-active {
+    background-color: #00FF371C;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #009E22;
+    text-align: center;
+}
+
+.user-inactive {
+    background-color: #ef080834;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #D80000;
+    text-align: center;
+}
+
+.user-admin {
+    background-color: #007bff13;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #007BFF;
+    text-align: center;
+}
+
+.user-normal {
+    background-color: #8b9db113;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: black;
+    text-align: center;
+}
+
+.user-row {
+
 }
