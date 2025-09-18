@@ -128,13 +128,10 @@
             mensagemDiv.innerHTML = '';
 
             if (data.success) {
-                // Redireciona se a resposta contém a URL
-                if (data.redirect_url) {
-                    window.location.href = data.redirect_url;
-                } else {
-                    form.reset();
-                    closeSidebar();
-                }
+                form.reset();
+                toastr.success(data.success);
+                atualizarTabelaUsuarios();
+                closeEditSidebar();
             } else if (data.error) {
                 let listaErros = '';
 

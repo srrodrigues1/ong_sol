@@ -12,7 +12,7 @@
 </head>
 <body class="body-users">
 
-        <!-- === MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ================================ -->
+    <!-- === MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ================================ -->
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-sm">
@@ -73,122 +73,115 @@
     <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
     <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.js"></script>
     <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
-    <script>
+<script>
+    // Globals (kept minimal and clear)
+    let DELETE_MODAL = null;
+    let deleteUserId = null;
 
-        var DELETE_MODAL;
-
-        function initTooltips() {
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl, {
-                    delay: { "show": 500, "hide": 100 }
-                });
-            });
-        }
-
-        function loadTableEvents() {
-            $('#tabela-usuarios').bootstrapTable({
-                formatShowingRows: function (pageFrom, pageTo, totalRows) {
-                    return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
-                },
-                locale: 'pt-BR'
-            });
-            $('#tabela-usuarios').on('post-body.bs.table', function () {
-                initTooltips();
-            });
-            $('#tabela-usuarios').on('search.bs.table', function () {
-                initTooltips();
-            });
-            initTooltips();
-
-            $('#tabela-usuarios').on('click', 'a.text-primary', function () {
-                event.preventDefault();
-                
-                const userId = $(this).closest('tr').data('id');
-                if (!userId) return;
-
-                fetch(`/users/${userId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        $('#sidebar-title-edit').text(data.username);
-                        document.getElementById('id_edit').value = data.id;
-                        document.getElementById('username_edit').value = data.username;
-                        document.getElementById('cpf_edit').value = data.cpf;
-                        document.getElementById('email_edit').value = data.email;
-                        document.getElementById('senha_edit').value = ".......";
-                        document.getElementById('status_edit').value = data.status;
-                        document.getElementById('funcao_edit').value = data.funcao;
-
-                        document.getElementById('sidebar-title').innerText = "Editar Usuário";
-
-                        openEditSidebar();
-                    })
-                    .catch(error => console.error('Erro ao buscar dados do usuário:', error));
-            });
-            $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
-                console.log("excl");
-                e.preventDefault();
-
-                // pega dados da linha clicada
-                const $row     = $(this).closest('tr');
-                deleteUserId   = $row.data('id');
-                const username = $row.children('td').eq(0).text();
-
-                // injeta nome no modal e exibe
-                $('#delete-username').text(username);
-                DELETE_MODAL.show();
-            });
-        }
-        
-        $(document).ready(function() {
-
-            
-            atualizarTabelaUsuarios();
-            $("#hide-table").css("visibility", "visible");
-
-            // ---------------------------------------------------------------------
-            // Confirmação de exclusão
-            // ---------------------------------------------------------------------
-            let deleteUserId = null;          // guarda o ID da linha clicada
-            const deleteModalEl = document.getElementById('deleteConfirmModal');
-            const deleteModal   = new bootstrap.Modal(deleteModalEl);
-            DELETE_MODAL = deleteModal;
-
-            // botão "Excluir" dentro do modal
-            $('#btn-confirm-delete').on('click', function () {
-                if (!deleteUserId) return;
-
-                // --- Exemplo usando fetch para POST /users/delete/<id>/ -----------
-                fetch(`/users/delete/${deleteUserId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'  // aproveita o token do Django
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Erro na exclusão');
-
-                    // remove a linha da tabela sem recarregar
-                    $('#tabela-usuarios').bootstrapTable('remove', {
-                        field: 'id',
-                        values: [deleteUserId]
-                    });
-
-                    toastr.success('Usuário removido com sucesso');
-                    deleteModal.hide();
-                })
-                .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+    function initTooltips() {
+        const tooltipTriggerList = [].slice.call(
+            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                delay: { show: 500, hide: 100 }
             });
         });
+    }
 
-        async function atualizarTabelaUsuarios() {
-            let response = await fetch("{% url 'usuarios_parciais' %}");
-            let html = await response.text();
-            document.querySelector("#hide-table").innerHTML = html;
+    function loadTableEvents() {
+        $('#tabela-usuarios').bootstrapTable({
+            formatShowingRows: function (pageFrom, pageTo, totalRows) {
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
+            },
+            locale: 'pt-BR'
+        });
 
-            loadTableEvents();
-        }
+        $('#tabela-usuarios').on('post-body.bs.table search.bs.table', function () {
+            initTooltips();
+        });
 
-    </script>
+        initTooltips();
+
+        // Editar usuário
+        $('#tabela-usuarios').on('click', 'a.text-primary', function (event) {
+            event.preventDefault();
+
+            const userId = $(this).closest('tr').data('id');
+            if (!userId) return;
+
+            fetch(`/users/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    $('#sidebar-title-edit').text(data.username);
+                    document.getElementById('id_edit').value = data.id;
+                    document.getElementById('username_edit').value = data.username;
+                    document.getElementById('cpf_edit').value = data.cpf;
+                    document.getElementById('email_edit').value = data.email;
+                    document.getElementById('senha_edit').value = ".......";
+                    document.getElementById('status_edit').value = data.status;
+                    document.getElementById('funcao_edit').value = data.funcao;
+
+                    document.getElementById('sidebar-title').innerText = "Editar Usuário";
+                    openEditSidebar();
+                })
+                .catch(error => console.error('Erro ao buscar dados do usuário:', error));
+        });
+
+        // Excluir usuário
+        $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
+            e.preventDefault();
+
+            const $row     = $(this).closest('tr');
+            deleteUserId   = $row.data('id');  // uses global
+            const username = $row.children('td').eq(0).text();
+
+            $('#delete-username').text(username);
+            DELETE_MODAL.show();
+        });
+    }
+
+    $(document).ready(function () {
+        atualizarTabelaUsuarios();
+        $("#hide-table").css("visibility", "visible");
+
+        // ---------------------------------------------------------------------
+        // Configuração do modal de exclusão
+        // ---------------------------------------------------------------------
+        const deleteModalEl = document.getElementById('deleteConfirmModal');
+        DELETE_MODAL = new bootstrap.Modal(deleteModalEl);
+
+        // Botão "Excluir" no modal
+        $('#btn-confirm-delete').on('click', function () {
+            if (!deleteUserId) return;
+
+            fetch(`/users/delete/${deleteUserId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Erro na exclusão');
+
+
+                toastr.success('Usuário removido com sucesso');
+                DELETE_MODAL.hide();
+                atualizarTabelaUsuarios();
+                deleteUserId = null; // limpa após excluir
+            })
+            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+        });
+    });
+
+    async function atualizarTabelaUsuarios() {
+        const response = await fetch("{% url 'usuarios_parciais' %}");
+        const html = await response.text();
+        document.querySelector("#hide-table").innerHTML = html;
+
+        loadTableEvents();
+    }
+</script>
+
 </body>
 </html>

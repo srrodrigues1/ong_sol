@@ -72,7 +72,7 @@ def criar_usuario(request):
             status=status,
             role=funcao
         )
-        # return redirect('users/index.html')
+
         return JsonResponse({'success': f"Usuário {username} criado com sucesso!"})
 
     return JsonResponse({'error': 'Método inválido'}, status=405)
@@ -111,8 +111,8 @@ def atualizar_usuario(request, user_id):
         if User.objects.filter(cpf=cpf).exclude(id=usuario.id).exists():
             erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
 
-        formated_cpf = cpf.replace('.', '');
-        formated_cpf = cpf.replace('-', '');
+        formated_cpf = cpf.replace('.', '')
+        formated_cpf = cpf.replace('-', '')
 
         if len(formated_cpf) < 11:
             erros["cpf"] = f"O CPF <b>{cpf}</b> não é válido."
@@ -150,8 +150,6 @@ def excluir_usuario(request, user_id):
 
     if usuario == request.user:
         return JsonResponse({'error': 'Você não pode excluir a si mesmo.'}, status=400)
-    if usuario.is_superuser:
-        return JsonResponse({'error': 'Não é permitido excluir um superusuário.'}, status=400)
 
     try:
         nome = usuario.username
@@ -160,7 +158,7 @@ def excluir_usuario(request, user_id):
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
 
-        return JsonResponse({'success': f"Usuário {usuario.username} excluído com sucesso!"})
+        return JsonResponse({'success': f"Usuário {nome} excluído com sucesso!"})
 
     except ProtectedError:
         msg = 'Não foi possível excluir este usuário: existem registros vinculados a ele.'
