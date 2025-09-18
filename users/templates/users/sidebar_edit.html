@@ -48,6 +48,7 @@
                 <div class="">
                     <label for="password_edit" class="form-label">Senha</label>
                     <input type="password" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="senha_edit" placeholder="Senha" name="password">
+                    <label class="float-end" id="password-strenght" style="font-size: 12px; color: #6d6f71; display: none;">A senha deve conter no mínimo 6 caracteres e um sendo especial</label>
                 </div>
                 <div class="">
                     <label for="status_edit" class="form-label">Status</label>
@@ -260,6 +261,7 @@
         savedValues.status = $("#status_edit").val();
         savedValues.funcao = $("#funcao_edit").val();
         
+        $("#password-strenght").show();
         $("#btn-cancelar-edit-save").show();
         $("#btn-cancelar-edit-cancel").show();
         $("#btn-cancelar-edit").hide();
@@ -277,6 +279,7 @@
     }
 
     function makeFormNonEditable() {
+        $("#password-strenght").hide();
         $("#btn-cancelar-edit-save").hide();
         $("#btn-cancelar-edit-cancel").hide();
         $("#btn-cancelar-edit").show();

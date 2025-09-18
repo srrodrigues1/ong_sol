@@ -175,7 +175,7 @@ def exportar_usuario_csv(request):
 
     writer.writerow(["ID", "Username", "Email", "CPF", "Status", "Função"])
 
-    users = User.objects.all().order_by("id").values_list("id", "username", "email", "cpf", "status", "role__name")
+    users = User.objects.all().order_by("id").values_list("id", "username", "email", "cpf", "status", "role_name")
     for user in users:
         writer.writerow(user)
 
