@@ -1,0 +1,212 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Equipamentos</title>
+    <link rel="stylesheet" href="{% static 'equipments/css/index.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="body-equipments">
+
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-sm">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteConfirmLabel">
+                    <i class="fa fa-triangle-exclamation text-danger me-2"></i>
+                    Confirmar exclusão
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                Tem certeza de que deseja excluir o equipamento <strong id="delete-username">...</strong>?
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btn-confirm-delete">
+                    <i class="fa fa-trash me-1"></i> Excluir
+                </button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <!-- ====   ================================================================= -->
+
+
+    <div class="d-flex">
+
+        {% include 'menu.html' %}
+        {% include 'equipments/sidebar_add.html' %}
+        {% include 'equipments/sidebar_edit.html' %}
+
+        <div id="sidebar-content"></div>
+        <div id="sidebar-edit-content"></div>
+
+        <div class="content flex-grow-1 p-4">
+            <div class="container">
+                <div>
+                    <h3 class="text page-label">Equipamentos</h3>
+                </div>
+                <div class="d-flex justify-content-end align-items-end mb-2">
+                    <button class="btn btn-add" onclick="openAddSidebar()">
+                        <i class="fa fa-plus"></i> Adicionar
+                    </button>
+                    <button class="btn btn-outline-secondary ms-2" id="exportar-dados">Exportar dados</button>
+                </div>
+
+                <div id="hide-table" style="visibility: hidden">
+                    {% include 'equipments/tabela_usuarios.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.js"></script>
+    <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+<script>
+    // Globals (kept minimal and clear)
+    let DELETE_MODAL = null;
+    let deleteUserId = null;
+
+    function initTooltips() {
+        const tooltipTriggerList = [].slice.call(
+            document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        );
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl, {
+                delay: { show: 500, hide: 100 }
+            });
+        });
+    }
+
+    function loadTableEvents() {
+        $('#tabela-usuarios').bootstrapTable({
+            formatShowingRows: function (pageFrom, pageTo, totalRows) {
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
+            },
+            locale: 'pt-BR'
+        });
+
+        $('#tabela-usuarios').on('post-body.bs.table search.bs.table', function () {
+            initTooltips();
+        });
+
+        initTooltips();
+
+        // Editar equipamento
+        $('#tabela-usuarios').on('click', 'a.text-primary', function (event) {
+            event.preventDefault();
+
+            const userId = $(this).closest('tr').data('id');
+            if (!userId) return;
+
+            fetch(`/equipments/${userId}`)
+                .then(response => response.json())
+                .then(data => {
+                    $('#sidebar-title-edit').text(data.username);
+                    document.getElementById('id_edit').value = data.id;
+                    document.getElementById('username_edit').value = data.username;
+                    document.getElementById('cpf_edit').value = data.cpf;
+                    document.getElementById('email_edit').value = data.email;
+                    document.getElementById('senha_edit').value = ".......";
+                    document.getElementById('status_edit').value = data.status;
+                    document.getElementById('funcao_edit').value = data.funcao;
+
+                    document.getElementById('sidebar-title').innerText = "Editar equipamento";
+                    openEditSidebar();
+                })
+                .catch(error => console.error('Erro ao buscar dados do usuário:', error));
+        });
+
+        // Excluir usuário
+        $('#tabela-usuarios').on('click', 'a.text-danger', function (e) {
+            e.preventDefault();
+
+            const $row     = $(this).closest('tr');
+            deleteUserId   = $row.data('id');  // uses global
+            const username = $row.children('td').eq(0).text();
+
+            $('#delete-username').text(username);
+            DELETE_MODAL.show();
+        });
+    }
+
+    $(document).ready(function () {
+        atualizarTabelaUsuarios();
+        $("#hide-table").css("visibility", "visible");
+
+        // ---------------------------------------------------------------------
+        // Configuração do modal de exclusão
+        // ---------------------------------------------------------------------
+        const deleteModalEl = document.getElementById('deleteConfirmModal');
+        DELETE_MODAL = new bootstrap.Modal(deleteModalEl);
+
+        // Botão "Excluir" no modal
+        $('#btn-confirm-delete').on('click', function () {
+            if (!deleteUserId) return;
+
+            fetch(`/equipments/delete/${deleteUserId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Erro na exclusão');
+
+
+                toastr.success('Usuário removido com sucesso');
+                DELETE_MODAL.hide();
+                atualizarTabelaUsuarios();
+                deleteUserId = null; // limpa após excluir
+            })
+            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
+        });
+
+        $('#exportar-dados').on('click', function() {
+            fetch(`/equipments/list`, {
+                method: 'GET'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erro ao exportar usuários");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "usuarios.csv"; // nome do arquivo baixado
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error(error);
+                alert("Falha ao baixar o CSV.");
+            });
+                })
+            });
+
+    async function atualizarTabelaUsuarios() {
+        const response = await fetch("{% url 'equipamentos_parciais' %}");
+        const html = await response.text();
+        document.querySelector("#hide-table").innerHTML = html;
+
+        loadTableEvents();
+    }
+</script>
+
+</body>
+</html>

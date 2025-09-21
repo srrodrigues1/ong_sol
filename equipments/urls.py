@@ -10,4 +10,5 @@ urlpatterns = [
     # path("update/<int:equipment_id>/", views.atualizar_equipamento, name="atualizar_equipamento"),
     # path("delete/<int:equipment_id>/", views.excluir_equipamento, name="excluir_equipamento"),
     # path("<int:equipment_id>/", views.emprestar_equipamento, name="emprestar_equipamento")
+    path("partials", views.equipamentos_parciais, name="equipamentos_parciais")
 ]

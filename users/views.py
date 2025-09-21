@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.hashers import make_password
-from django.contrib import messages
 from django.urls import reverse
 from django.db.models import ProtectedError
 from django.http import JsonResponse

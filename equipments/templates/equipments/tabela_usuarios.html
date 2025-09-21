@@ -1,0 +1,63 @@
+<table id="tabela-usuarios"
+    class="table table-hover table-bordered table-striped align-middle table-sm"
+    data-toggle="table"
+    data-pagination="true"
+    data-search="true"
+    data-show-loading="true"
+    data-page-list="[10]"
+    data-pagination-loop="true"
+    data-locale="pt-BR"
+    data-id-field="id"
+    data-unique-id="id">
+    <thead class="table-light">
+        <tr>
+            <th data-field="username" class="td-truncate" data-width="60" data-sortable="true">Nome</th>
+            <th data-field="cpf" class="td-truncate" data-width="40" data-sortable="true">Tipo</th>
+            <th data-field="email" class="td-truncate" data-width="80" data-sortable="true">Localização</th>
+            <th data-field="status" class="td-truncate" data-width="30" data-sortable="true">Status</th>
+            <th data-field="acoes" style="text-align: center" class="td-truncate" data-width="27">Ações</th>
+        </tr>
+    </thead>
+
+    <tbody id="usuarios-body">
+        {% for user in users %}
+        <tr data-id="{{ user.id }}">
+            <td class="user-row" title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
+            <td class="user-row" title="{{ user.cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.cpf }}</td>
+            <td class="user-row" title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
+            <td>
+                {% if user.role_id == 1 %}
+                    <div class="user-admin">Administrador</div>
+                {% else %}
+                    <div class="user-normal">Usuário</div>
+                {% endif %}
+            </td>
+            <td>
+                {% if user.status == 1 %}
+                    <div class="user-active">Ativo</div>
+                {% else %}
+                    <div class="user-inactive">Inativo</div>
+                {% endif %}
+            </td>
+            <td>{{ user.create_date|date:"d/m/Y" }}</td>
+            <td style="text-align: center">
+                <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
+                <a href="#" class="text-danger btn-excluir" data-id="{{ user.id }}"><i class="fa fa-trash"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+
+$(document).ready(function() {
+    $('#tabela-usuarios').bootstrapTable({
+        formatShowingRows: function (pageFrom, pageTo, totalRows) {
+            return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
+        }
+    });
+    
+});
+
+</script>

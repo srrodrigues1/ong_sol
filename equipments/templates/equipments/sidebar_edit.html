@@ -1,0 +1,309 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'users/css/sidebar_add.css' %}">
+    <link rel="stylesheet" href="{% static 'css/toastr.min.css' %}">
+</head>
+</html>
+
+<div id="sidebar-edit" class="sidebar-container">
+    <div class="sidebar-overlay"></div>
+
+    <div class="sidebar-content">
+        <div class="sidebar-header">
+            <h4 id="sidebar-title-edit" class="sidebar-title"></h4>
+            <div id="options-holder" class="d-flex gap-3">
+                <a id="sidebar-btn-edit" onclick="makeFormEditable()" href="#">Editar usuário</a>
+                <a id="sidebar-btn-history" href="#">Visualizar histórico</a>
+            </div>
+        </div>
+
+        <div id="loading-overlay-edit" class="loading-overlay" style="display: none">
+            <img src="{% static 'img/loading_icon.gif' %}" alt="Carregando..." width="50">        
+        </div>
+
+        <div id="mensagem-usuario"></div>
+        
+        <div class="sidebar-body">
+            <form id="form-usuario-edit" class="form-usuario" method="post">
+                {% csrf_token %}
+                <div style="display: none;">
+                    <label for="id_edit" class="form-label">Id</label>
+                    <input type="text" class="form-control" disabled id="id_edit" name="id">
+                </div>
+                <div class="">
+                    <label for="username_edit" class="form-label">Nome Completo</label>
+                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="username_edit" placeholder="Nome" name="username">
+                </div>
+                <div class="">
+                    <label for="cpf_edit" class="form-label">CPF</label>
+                    <input type="text" onkeydown="removeRequiredStyle(this)" onkeyup="editFormatarCPF()" class="form-control" disabled id="cpf_edit" placeholder="CPF" name="cpf">
+                </div>
+                <div class="">
+                    <label for="email_edit" class="form-label">E-mail</label>
+                    <input type="email" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="email_edit" placeholder="E-mail" name="email">
+                </div>
+                <div class="">
+                    <label for="password_edit" class="form-label">Senha</label>
+                    <input type="password" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="senha_edit" placeholder="Senha" name="password">
+                    <label class="float-end" id="password-strenght" style="font-size: 12px; color: #6d6f71; display: none;">A senha deve conter no mínimo 6 caracteres e um sendo especial</label>
+                </div>
+                <div class="">
+                    <label for="status_edit" class="form-label">Status</label>
+                    <select onchange="removeRequiredStyle(this)"  class="form-select" disabled id="status_edit" name="status">
+                        <option value="1" selected>Ativo</option>
+                        <option value="2">Inativo</option>
+                    </select>
+                </div>
+                <div class="">
+                    <label for="funcao_edit" class="form-label">Função</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" disabled id="funcao_edit" name="funcao">
+                        <option value="1">Administrador</option>
+                        <option value="2" selected>Usuário</option>
+                    </select>
+                </div>
+
+                <div class="form-buttons d-flex justify-content-end">
+                    <button id="btn-cancelar-edit" type="button" class="btn btn-outline-success me-2" onclick="closeEditSidebar()">Cancelar</button>
+                    <button id="btn-cancelar-edit-cancel" type="button" class="btn btn-outline-success me-2" onclick="makeFormNonEditable()">Voltar</button>
+                    <button id="btn-cancelar-edit-save" type="submit" class="btn btn-success">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+<script src="{% static 'js/toastr.min.js' %}"></script>
+<script>
+
+    toastr.options.closeButton = true;
+    toastr.options.timeOut = 3000;
+    toastr.options.progressBar = true;
+    toastr.options.extendedTimeOut = 0;
+    toastr.options.preventDuplicates = true;
+
+    let savedValues = {};
+
+    document.getElementById('form-usuario-edit').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = e.target;
+        handleFormOnSave();
+
+        if (validateFormEdit(form) > 0) {
+            handleFormOnResponse(0);
+            return;
+        }
+
+        const formData = new FormData(form);
+        let userId = $("#id_edit").val();
+
+        if ($("#senha_edit").val() === ".......") {
+            formData.delete("password");
+        }
+
+        const url = `/users/update/${userId}/`;
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        }).then(response => {
+            handleFormOnResponse(1);
+
+            // Verifica se a resposta é JSON ou HTML
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                // Se o backend retornou HTML, faça o redirecionamento
+                window.location.href = '/users';
+                return;
+            }
+        }).then(data => {
+            if (!data) return;  // Se redirecionou, nada a fazer
+
+            const mensagemDiv = document.getElementById('mensagem-usuario');
+            mensagemDiv.innerHTML = '';
+
+            if (data.success) {
+                form.reset();
+                toastr.success(data.success);
+                atualizarTabelaUsuarios();
+                closeEditSidebar();
+            } else if (data.error) {
+                let listaErros = '';
+
+                for (let campo in data.error) {
+                    listaErros += ' - ' + data.error[campo] + '<br>'
+                    const campoEl = document.getElementById(campo + "-");
+                    if (campoEl) {
+                        campoEl.style.borderColor = '#eb0000';
+                    }
+                }
+                toastr.warning(listaErros);
+            }
+        }).catch(error => {
+            });
+        });
+    
+    function removeRequiredStyle(input) {
+        input.style = 'border-color: #ced4da';
+    }
+
+    function resetFormEdit(form) {
+        form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
+        form.find("select").prop("selectedIndex", 0);
+        $("#username_edit").css("border-color", "#ced4da");
+        $("#cpf_edit").css("border-color", "#ced4da");
+        $("#email_edit").css("border-color", "#ced4da");
+        $("#senha_edit").css("border-color", "#ced4da");
+        $("#funcao_edit").css("border-color", "#ced4da");
+    }    
+
+    function validateFormEdit(form) {
+
+        let invalid = 0;
+        const username = form.username.value.trim();
+        const cpf = form.cpf.value.trim();
+        const email = form.email.value.trim();
+        const senha = form.password.value.trim();
+        const status = form.status.value;
+        const funcao = form.funcao.value;
+
+        if (!username) {
+            form.username.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!cpf) {
+            form.cpf.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!email) {
+            form.email.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!senha) {
+            form.senha.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!status) {
+            form.status.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!funcao) {
+            form.funcao.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        return invalid;
+    }
+
+    function openEditSidebar() {
+        document.getElementById('sidebar-edit').classList.add('active');
+    }
+
+    function closeEditSidebar() {
+        let form = $('#form-usuario-edit');
+        resetFormEdit(form);
+
+        document.getElementById('sidebar-edit').classList.remove('active');
+    }
+
+    function editFormatarCPF() {
+        const cpfInput = document.getElementById("cpf_edit");
+        let cpf = cpfInput.value.replace(/\D/g, ''); // Remove não-números
+
+        if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
+
+        let cpfFormatado = '';
+
+        if (cpf.length > 9) {
+            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
+        } else if (cpf.length > 6) {
+            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
+        } else if (cpf.length > 3) {
+            cpfFormatado = cpf.replace(/(\d{3})(\d{0,3})/, "$1.$2");
+        } else {
+            cpfFormatado = cpf;
+        }
+
+        cpfInput.value = cpfFormatado;
+    }
+
+    function handleFormOnSave() {
+        $("#loading-overlay-edit").show();
+        $("#btn-cancelar-edit").prop("disabled", true);
+        $("#btn-salvar-edit").prop("disabled", true);
+    }
+
+    function handleFormOnResponse(serverSideValidation) {
+        if (serverSideValidation == 1) {
+            setTimeout(function() {
+                $("#loading-overlay-edit").hide();
+                $("#btn-cancelar-edit").prop("disabled", false);
+                $("#btn-salvar-edit").prop("disabled", false);        
+            }, 500);
+
+            return;
+        }
+        $("#loading-overlay-edit").hide();
+        $("#btn-cancelar-edit").prop("disabled", false);
+        $("#btn-salvar-edit").prop("disabled", false);    
+    }
+
+    function makeFormEditable() {
+        savedValues.username = $("#username_edit").val();
+        savedValues.cpf = $("#cpf_edit").val();
+        savedValues.email = $("#email_edit").val();
+        savedValues.password = $("#senha_edit").val();
+        savedValues.status = $("#status_edit").val();
+        savedValues.funcao = $("#funcao_edit").val();
+        
+        $("#password-strenght").show();
+        $("#btn-cancelar-edit-save").show();
+        $("#btn-cancelar-edit-cancel").show();
+        $("#btn-cancelar-edit").hide();
+        
+        let form = $('#form-usuario-edit')
+        form.find("input[type=text], input[type=password], input[type=email], textarea").prop("disabled", false);
+        form.find("select").prop("disabled", false);
+        $("#username_edit").prop("disabled", false);
+        $("#cpf_edit").prop("disabled", false);
+        $("#email_edit").prop("disabled", false);
+        $("#senha_edit").prop("disabled", false);
+        $("#funcao_edit").prop("disabled", false);
+
+        $("#options-holder").css("visibility", "hidden");
+    }
+
+    function makeFormNonEditable() {
+        $("#password-strenght").hide();
+        $("#btn-cancelar-edit-save").hide();
+        $("#btn-cancelar-edit-cancel").hide();
+        $("#btn-cancelar-edit").show();
+
+        let form = $('#form-usuario-edit')
+        form.find("input[type=text], input[type=password], input[type=email], textarea").prop("disabled", true);
+        form.find("select").prop("disabled", true);
+        $("#username_edit").prop("disabled", true);
+        $("#cpf_edit").prop("disabled", true);
+        $("#email_edit").prop("disabled", true);
+        $("#senha_edit").prop("disabled", true);
+        $("#funcao_edit").prop("disabled", true);
+        $("#username_edit").val(this.username);
+
+        $("#username_edit").val(savedValues.username);
+        $("#cpf_edit").val(savedValues.cpf);
+        $("#email_edit").val(savedValues.email);
+        $("#senha_edit").val(".......");  // ou savedValues.password se quiser a original
+        $("#status_edit").val(savedValues.status);
+        $("#funcao_edit").val(savedValues.funcao);
+
+        $("#options-holder").css("visibility", "visible");
+    }
+
+</script>
+</body>
+</html>
