@@ -25,6 +25,6 @@ def index(request):
 @login_required
 def equipamentos_parciais(request):
     users = Equipment.objects.all().order_by("id")
-    return render(request, 'equipments/tabela_usuarios.html', {
+    return render(request, 'equipments/tabela_equipamentos.html', {
         'users': users
     })

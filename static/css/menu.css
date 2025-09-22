@@ -29,7 +29,11 @@
     font-weight: bold;
 }
 
-.menu a:hover, .menu a.active {
+.menu a:hover {
+   background-color: rgba(46, 125, 50, 0.07);
+}
+
+.menu a.active {
     background-color: rgba(46, 125, 50, 0.2);
 }
 

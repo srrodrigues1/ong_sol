@@ -6,8 +6,7 @@ from django.contrib.auth.hashers import check_password
 from users.models import User
 
 def index(request):
-    return render(request, 'login/index.html', {
-    })
+    return render(request, 'login/index.html', {})
 
 def logar(request):
     if request.method == "POST":
@@ -28,5 +27,25 @@ def logar(request):
         else:                
             return JsonResponse({"success": False, "message": "Usuário ou senha inválidos!"})
 
-    # Se for GET, só renderiza a página de login
     return render(request, "login/index.html")
+
+def deslogar(request):
+    if request.method == "POST":
+        request.session.flush()
+        return JsonResponse({"success": True, "message": "Deslogando usuário"})
+    
+    return render(request, "login/index.html")
+
+def obter_usuario(request):
+    user_id = request.session.get("user_id")
+    if user_id:
+        try:
+            user = User.objects.get(id=user_id)
+            user_data = {
+                'username': user.username,
+            }
+            return JsonResponse({"success": True, "user": user_data, "message": "Usuário logado"})
+        except User.DoesNotExist:
+            pass
+    
+    return JsonResponse({"success": False, "message": "Usuário não está autenticado"})

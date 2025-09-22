@@ -6,8 +6,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{% static 'css/toastr.min.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
   <title>Login</title>
   <style>
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -183,9 +185,9 @@ document.getElementById('form-login').addEventListener('submit', function(e) {
 
   function formatarCPF() {
       const cpfInput = document.getElementById("cpf");
-      let cpf = cpfInput.value.replace(/\D/g, ''); // Remove não-números
+      let cpf = cpfInput.value.replace(/\D/g, '');
 
-      if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
+      if (cpf.length > 11) cpf = cpf.slice(0, 11);
 
       let cpfFormatado = '';
 
