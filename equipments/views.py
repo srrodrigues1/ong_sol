@@ -23,8 +23,43 @@ def index(request):
     })
 
 @login_required
+def criar_equipamento(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        type = request.POST.get('type')
+        location = request.POST.get('location')
+        status = request.POST.get('status')
+
+        erros = {}
+        Equipment.objects.create(
+            name=name,
+            type=type,
+            location=location,
+            status=status
+        )
+
+        return JsonResponse({"status": "success", "message": "Equipamento cadastrado com sucesso!"})
+
+@login_required
 def equipamentos_parciais(request):
-    users = Equipment.objects.all().order_by("id")
+    equipments = Equipment.objects.all().order_by("id")
     return render(request, 'equipments/tabela_equipamentos.html', {
-        'users': users
+        'equipments': equipments
     })
+
+@login_required
+def dados_equipamento(request, equipment_id):
+    try:
+        equipment = Equipment.objects.get(id=equipment_id)
+        data = {
+            'id': equipment.id,
+            'name': equipment.name,
+            'type': equipment.type,
+            'location': equipment.location,
+            'requester': 1,# equipment.requester,
+            'status': equipment.status,
+            'create_date': equipment.create_date,
+        }
+        return JsonResponse(data)
+    except Equipment.DoesNotExist:
+        return JsonResponse({'error': 'Usuário não encontrado'}, status=404)

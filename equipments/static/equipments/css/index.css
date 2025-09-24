@@ -1,5 +1,5 @@
 /* Customizações do layout */
-body.body-users {
+body.body-equipments {
     background-color: #f5f5f5;
 }
 
@@ -162,7 +162,7 @@ table.table-sm thead tr th {
     font-size: 14px;
 }
 
-#tabela-usuarios {
+#tabela-equipamentos {
     table-layout: fixed;
     flex-grow: 1;
     width: 100%;
@@ -178,13 +178,13 @@ table.table-sm thead tr th {
 }
 
 /* Tabela fixa sem esticar linhas */
-#tabela-usuarios .fixed-table-body {
+#tabela-equipamentos .fixed-table-body {
     /* max-height: 250px; */
     max-height: 100%;
     height: 80%;
     overflow-y: auto;
 }
-#tabela-usuarios tbody {
+#tabela-equipamentos tbody {
     display: block;
     height: 100%;
     overflow-y: auto;
@@ -194,21 +194,21 @@ table.table-sm thead tr th {
     border-bottom: 1px solid #dee2e6;
 }
 
-#tabela-usuarios thead {
+#tabela-equipamentos thead {
     display: table;
     width: 100%;
     table-layout: fixed;
 }
 
-#tabela-usuarios thead, 
-#tabela-usuarios tbody, 
-#tabela-usuarios tr, 
-#tabela-usuarios th, 
-#tabela-usuarios td {
+#tabela-equipamentos thead, 
+#tabela-equipamentos tbody, 
+#tabela-equipamentos tr, 
+#tabela-equipamentos th, 
+#tabela-equipamentos td {
     border: none !important;
 }
 
-#tabela-usuarios tbody tr {
+#tabela-equipamentos tbody tr {
     display: table;
     width: 100%;
     table-layout: fixed;
@@ -219,8 +219,7 @@ table.table-sm thead tr th {
     white-space: nowrap;
     text-overflow: ellipsis;
 }
-
-.user-active {
+.equipment-active {
     background-color: #00FF371C;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
@@ -228,8 +227,7 @@ table.table-sm thead tr th {
     color: #009E22;
     text-align: center;
 }
-
-.user-inactive {
+.equipment-inactive {
     background-color: #ef080834;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
@@ -237,8 +235,15 @@ table.table-sm thead tr th {
     color: #D80000;
     text-align: center;
 }
-
-.user-admin {
+.equipment-loaned {
+    background-color: #B5CC0033;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #899B00;
+    text-align: center;
+}
+.equipment-repair {
     background-color: #007bff13;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
@@ -246,12 +251,19 @@ table.table-sm thead tr th {
     color: #007BFF;
     text-align: center;
 }
-
-.user-normal {
+.equipment-lost {
     background-color: #8b9db113;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
     font-weight: bold;
     color: black;
+    text-align: center;
+}
+.equipment-broken {
+    background-color: #ab00c10c;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #a900c1;
     text-align: center;
 }

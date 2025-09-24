@@ -1,7 +1,6 @@
 .alert.alert-danger {
     padding: 10px;
     border-radius: 5px;
-    /* margin-bottom: 10px; */
     animation: fadeOut 4s forwards;
     position: absolute;
     pointer-events: none;
@@ -12,7 +11,6 @@
     80% { opacity: 1; }
     100% { opacity: 0; }
 }    
-/* Sidebar container e overlay */
 .sidebar-container {
     position: fixed;
     top: 0;
@@ -41,14 +39,6 @@ input:required:invalid {
     background: rgba(0, 0, 0, 0.5);
 }
 
-/* .sidebar-header { */
-    /* border-bottom-style: solid;
-    border-width: 1px;
-    border-color: #21c66b;
-    margin-bottom: 15px; */
-/* } */
-
-/* Sidebar principal */
 .sidebar-content {
     position: absolute;
     top: 0;

@@ -3,7 +3,12 @@ from simple_history.models import HistoricalRecords
 
 class Equipment(models.Model):
     name = models.CharField(max_length=50)
-    type = models.CharField(max_length=100)
+    TYPE_CHOICES = [
+        (0, 'Cadeira de Rodas'),
+        (1, 'Muletas'),
+        (2, 'Cama Hospitalar'),
+    ]
+    type = models.IntegerField(choices=TYPE_CHOICES)
     create_date = models.DateTimeField(auto_now_add=True)
     STATUS_CHOICES = [
         (0, 'Inativo'),

@@ -5,7 +5,6 @@
     data-search="true"
     data-show-loading="true"
     data-page-list="[10]"
-    data-pagination-loop="true"
     data-locale="pt-BR"
     data-id-field="id"
     data-unique-id="id">
@@ -41,7 +40,7 @@
                     <div class="user-inactive">Inativo</div>
                 {% endif %}
             </td>
-            <td>{{ user.create_date|date:"d/m/Y" }}</td>
+            <td>{{ user.create_date|date:"d/m/Y H:i" }}</td>
             <td style="text-align: center">
                 <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
                 <a href="#" class="text-danger btn-excluir" data-id="{{ user.id }}"><i class="fa fa-trash"></i></a>
@@ -53,13 +52,12 @@
 
 <script>
 
-$(document).ready(function() {
-    $('#tabela-usuarios').bootstrapTable({
-        formatShowingRows: function (pageFrom, pageTo, totalRows) {
-            return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
-        }
+    $(document).ready(function() {
+        $('#tabela-usuarios').bootstrapTable({
+            formatShowingRows: function (pageFrom, pageTo, totalRows) {
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
+            }
+        });
     });
-    
-});
 
 </script>
