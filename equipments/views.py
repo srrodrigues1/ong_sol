@@ -4,6 +4,9 @@ from django.db.models import ProtectedError
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.views.decorators.http import require_POST
+
+import csv
 
 def login_required(view_func):
     @wraps(view_func)
@@ -63,3 +66,60 @@ def dados_equipamento(request, equipment_id):
         return JsonResponse(data)
     except Equipment.DoesNotExist:
         return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
+    
+
+@login_required
+@require_POST
+def atualizar_equipamento(request, equipment_id):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        type = request.POST.get('type')
+        location = request.POST.get('location')
+        status = request.POST.get('status')
+
+        erros = {}
+
+        equipment = get_object_or_404(Equipment, id=equipment_id)
+
+        equipment.name = name
+        equipment.type = type
+        equipment.location = location
+        equipment.status = status
+
+        equipment.save()
+        return JsonResponse({'success': f"Equipamento {name} atualizado com sucesso!"})
+
+    return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+@login_required
+def exportar_equipamento_csv(request):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="equipamento.csv"'
+
+    writer = csv.writer(response)
+
+    writer.writerow(["ID", "Nome", "Tipo", "Localização", "Status"])
+
+    equipments = Equipment.objects.all().order_by("id").values_list("id", "name", "type", "location", "status")
+    for equipment in equipments:
+        writer.writerow(equipment)
+
+    return response
+
+@login_required
+@require_POST
+def excluir_equipamento(request, equipment_id):
+    equipamento = get_object_or_404(Equipment, id=equipment_id)
+
+    try:
+        nome = equipamento.name
+        equipamento.delete()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+
+        return JsonResponse({'success': f"Equipamento {nome} excluído com sucesso!"})
+
+    except ProtectedError:
+        msg = 'Não foi possível excluir este equipamento: existem registros vinculados a ele.'
+        return JsonResponse({'error': msg}, status=400)

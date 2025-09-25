@@ -1,6 +1,8 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from .models import Person
+
 class Equipment(models.Model):
     name = models.CharField(max_length=50)
     TYPE_CHOICES = [
@@ -27,7 +29,7 @@ class Equipment(models.Model):
     
 class Loans(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="loans")
-    requester = models.CharField(max_length=50)  # futuramente -> models.ForeignKey(Person, ...)
+    # requester = models.ForeignKey(Person, ...)
     loan_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField(null=True, blank=True)
     status = models.CharField(max_length=20, default="ativo")  # ativo, devolvido, atrasado

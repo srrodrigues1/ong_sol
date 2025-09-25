@@ -1,4 +1,13 @@
 {% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="{% static 'users/css/sidebar_add.css' %}">
+    <link rel="stylesheet" href="{% static 'css/toastr.min.css' %}">
+</head>
+</html>
+
 <div id="sidebar-edit" class="sidebar-container">
     <div class="sidebar-overlay"></div>
 
@@ -61,6 +70,8 @@
         </div>
     </div>
 </div>
+<script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
+<script src="{% static 'js/toastr.min.js' %}"></script>
 <script>
 
     toastr.options.closeButton = true;
@@ -89,17 +100,15 @@
         }).then(response => {
             handleFormOnResponse(1);
 
-            // Verifica se a resposta é JSON ou HTML
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json();
             } else {
-                // Se o backend retornou HTML, faça o redirecionamento
                 window.location.href = '/users';
                 return;
             }
         }).then(data => {
-            if (!data) return;  // Se redirecionou, nada a fazer
+            if (!data) return;
 
             const mensagemDiv = document.getElementById('mensagem-usuario');
             mensagemDiv.innerHTML = '';
@@ -107,7 +116,8 @@
             if (data.success) {
                 form.reset();
                 toastr.success(data.success);
-                atualizarTabelaUsuarios();
+                atualizarTabelaEquipamentos();
+                makeFormNonEditable();
                 closeEditSidebar();
             } else if (data.error) {
                 let listaErros = '';
@@ -130,7 +140,7 @@
     }
 
     function resetFormEdit(form) {
-        form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
+        form.find("input[type=text], textarea").val("");
         form.find("select").prop("selectedIndex", 0);
         $("#name_edit").css("border-color", "#ced4da");
         $("#type_edit").css("border-color", "#ced4da");
@@ -171,27 +181,20 @@
     }
 
     function makeFormEditable() {
-        console.log("teste sadas");
-        console.log(savedValues);
-        console.log("teste");
         savedValues.name = $("#name_edit").val();
-        console.log("teste 1");
         savedValues.type = $("#type_edit").val();
-        console.log("teste 2");
         savedValues.location = $("#location_edit").val();
-        console.log("teste 3");
         savedValues.status = $("#status_edit").val();
-        console.log("teste 4");
         
-        // $("#btn-cancelar-edit-save").show();
-        // $("#btn-cancelar-edit-cancel").show();
-        // $("#btn-cancelar-edit").hide();
+        $("#btn-cancelar-edit-save").show();
+        $("#btn-cancelar-edit-cancel").show();
+        $("#btn-cancelar-edit").hide();
         
-        // let form = $('#form-equipamento-edit')
-        // $("#name_edit").prop("disabled", false);
-        // $("#type_edit").prop("disabled", false);
-        // $("#location_edit").prop("disabled", false);
-        // $("#status_edit").prop("disabled", false);
+        let form = $('#form-equipamento-edit')
+        $("#name_edit").prop("disabled", false);
+        $("#type_edit").prop("disabled", false);
+        $("#location_edit").prop("disabled", false);
+        $("#status_edit").prop("disabled", false);
 
         $("#options-holder").css("visibility", "hidden");
     }

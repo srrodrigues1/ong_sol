@@ -1,3 +1,7 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'equipments/css/index.css' %}">
+
 <table id="tabela-equipamentos"
     class="table table-hover table-bordered table-striped align-middle table-sm"
     data-toggle="table"
@@ -62,10 +66,12 @@
 
 <script>
 
-    $('#tabela-equipamentos').bootstrapTable({
-        formatShowingRows: function (pageFrom, pageTo, totalRows) {
-            return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> equipamentos.';
-        }
+    $(document).ready(function() {
+        $('#tabela-equipamentos').bootstrapTable({
+            formatShowingRows: function (pageFrom, pageTo, totalRows) {
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> equipamentos.';
+            }
+        });
     });
 
 </script>
