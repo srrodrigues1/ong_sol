@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'simple_history',
     'login',
     'equipments',
+    'persons'
 ]
 
 MIDDLEWARE = [

@@ -1,11 +1,6 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-
-class Documents(models.Model):
-    image = models.ImageField(upload_to='documents/')
-    create_date = models.DateTimeField(auto_now_add=True)
-
 class Person(models.Model):
     name = models.CharField(max_length=50)
     cpf = models.CharField(max_length=14, unique=True)
@@ -29,3 +24,15 @@ class Person(models.Model):
     
     def __str__(self):
         return self.name
+    
+class Documents(models.Model):
+    person = models.ForeignKey(
+        Person, 
+        on_delete=models.CASCADE, 
+        related_name="documents"
+    )
+    image = models.ImageField(upload_to='documents/')
+    create_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.person.name} - {self.id}"

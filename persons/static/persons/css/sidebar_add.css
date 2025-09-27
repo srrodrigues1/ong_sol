@@ -1,0 +1,187 @@
+.alert.alert-danger {
+    padding: 10px;
+    border-radius: 5px;
+    animation: fadeOut 4s forwards;
+    position: absolute;
+    pointer-events: none;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}    
+.sidebar-container {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1050;
+    display: none;
+}
+
+input:required:invalid {
+    border-color: #eb0000;
+    border-width: 1px;
+}
+
+.sidebar-container.active {
+    display: block;
+}
+
+.sidebar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.sidebar-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 400px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.15);
+    padding: 25px;
+    overflow-y: hidden;
+    transition: transform 0.3s ease;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Título */
+.sidebar-title {
+    color: #01AC4D;
+    font-size: 22px;
+    font-weight: bold;
+    margin: 0;
+    padding-bottom: 5px;
+}
+
+/* Fechar botão */
+.btn-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #6c757d;
+    cursor: pointer;
+}
+
+.btn-close:hover {
+    color: #dc3545;
+}
+
+.sidebar-body {
+    margin-top: 2%;
+    height: 90%;
+}
+
+/* Corpo do sidebar (formulário, conteúdo) */
+.sidebar-body label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+.sidebar-body input,
+.sidebar-body select {
+    scroll-behavior: auto;
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ced4da;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.form-pessoa {
+    height: 100%;
+    position: relative;
+}
+
+.sidebar-body input:focus,
+.sidebar-body select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.2rem rgba(40,167,69,.25);
+}
+
+.sidebar-body .form-buttons {
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+}
+
+.sidebar-body .btn {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px 20px;
+    border-radius: 5px;
+    min-width: 120px;
+}
+
+.sidebar-body .btn-success {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+}
+
+.sidebar-body .btn-success:hover {
+    background-color: #218838;
+}
+
+.sidebar-body .btn-outline-success {
+    border: 1px solid #28a745;
+    color: #28a745;
+    background: transparent;
+}
+
+.sidebar-body .btn-outline-success:hover {
+    background: #28a745;
+    color: #fff;
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.7); /* leve opacidade branca */
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-overlay img {
+    width: 50px;
+    height: 50px;
+}
+
+#sidebar-btn-history {
+    text-decoration: none;
+    font-size: 15px;
+}
+
+#sidebar-btn-edit {
+    text-decoration: none;
+    font-size: 15px;
+}
+
+#btn-cancelar-edit-save {
+    display: none;
+}
+
+#btn-cancelar-edit-cancel {
+    display: none;
+}
+
+.toast.toast-warning {
+    opacity: 1 !important;
+    font-size: 14px !important;
+    width: 100% !important;
+}
