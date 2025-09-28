@@ -76,6 +76,10 @@
     <script src="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
 <script>
 
+    function openAddSidebar() {
+        document.getElementById('sidebar').classList.add('active');
+    }
+
     let DELETE_MODAL = null;
     let deleteUserId = null;
 
@@ -83,6 +87,7 @@
         const tooltipTriggerList = [].slice.call(
             document.querySelectorAll('[data-bs-toggle="tooltip"]')
         );
+
         tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl, {
                 delay: { show: 500, hide: 100 }
@@ -93,7 +98,7 @@
     function loadTableEvents() {
         $('#tabela-pessoas').bootstrapTable({
             formatShowingRows: function (pageFrom, pageTo, totalRows) {
-                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> usuários.';
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> pessoas.';
             },
             locale: 'pt-BR'
         });
@@ -143,7 +148,7 @@
     }
 
     $(document).ready(function () {
-        atualizarTabelapessoas();
+        atualizarTabelaPessoas();
         $("#hide-table").css("visibility", "visible");
 
         // ---------------------------------------------------------------------
@@ -201,7 +206,7 @@
                 })
             });
 
-    async function atualizarTabelapessoas() {
+    async function atualizarTabelaPessoas() {
         const response = await fetch("{% url 'pessoas_parciais' %}");
         const html = await response.text();
         document.querySelector("#hide-table").innerHTML = html;

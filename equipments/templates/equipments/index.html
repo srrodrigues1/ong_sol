@@ -124,7 +124,12 @@
                 .catch(error => console.error('Erro ao buscar dados do equipamento:', error));
         });
 
-        // Excluir usuário
+        $('#tabela-equipamentos').on('click', 'a.text-secondary', function(e) {
+            e.preventDefault();
+
+            
+        })
+
         $('#tabela-equipamentos').on('click', 'a.text-danger', function (e) {
             e.preventDefault();
 

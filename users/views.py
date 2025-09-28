@@ -10,6 +10,12 @@ from functools import wraps
 import csv
 import re
 
+def format_cpf(cpf: str) -> str:
+    cpf = re.sub(r'\D', '', cpf)  # só números
+    if len(cpf) == 11:
+        return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+    return cpf
+
 def login_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
@@ -27,9 +33,7 @@ from .models import User, Role
 @login_required
 def index(request):
     users = User.objects.all().order_by("id")
-    return render(request, 'users/index.html', {
-        'users': users
-    })
+    return render(request, 'users/index.html', {})
 
 @login_required
 def criar_usuario(request):
@@ -44,9 +48,9 @@ def criar_usuario(request):
 
         erros = {}
         formated_cpf = cpf.replace('.', '')
-        formated_cpf = cpf.replace('-', '')
+        formated_cpf = formated_cpf.replace('-', '')
 
-        if User.objects.filter(cpf=cpf).exists():
+        if User.objects.filter(cpf=formated_cpf).exists():
             erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
 
         if len(formated_cpf) < 11:
@@ -67,7 +71,7 @@ def criar_usuario(request):
 
         User.objects.create(
             username=username,
-            cpf=cpf,
+            cpf=formated_cpf,
             email=email,
             password=senha_hash,
             status=status,
@@ -85,7 +89,7 @@ def dados_usuario(request, user_id):
         data = {
             'id': user.id,
             'username': user.username,
-            'cpf': user.cpf,
+            'cpf': format_cpf(user.cpf),
             'email': user.email,
             'status': user.status,
             'funcao': user.role_id,
@@ -109,11 +113,11 @@ def atualizar_usuario(request, user_id):
 
         usuario = get_object_or_404(User, id=user_id)
 
-        if User.objects.filter(cpf=cpf).exclude(id=usuario.id).exists():
-            erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
-
         formated_cpf = cpf.replace('.', '')
-        formated_cpf = cpf.replace('-', '')
+        formated_cpf = formated_cpf.replace('-', '')
+        
+        if User.objects.filter(cpf=formated_cpf).exclude(id=usuario.id).exists():
+            erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
 
         if len(formated_cpf) < 11:
             erros["cpf"] = f"O CPF <b>{cpf}</b> não é válido."
@@ -129,7 +133,7 @@ def atualizar_usuario(request, user_id):
             return JsonResponse({'error': erros}, status=400)
 
         usuario.username = username
-        usuario.cpf = cpf
+        usuario.cpf = formated_cpf
         usuario.email = email
         usuario.status = status
 
@@ -183,6 +187,8 @@ def exportar_usuario_csv(request):
 @login_required
 def usuarios_parciais(request):
     users = User.objects.all().order_by("id")
+    for user in users:
+        user.formatted_cpf = format_cpf(user.cpf)
     return render(request, 'users/tabela_usuarios.html', {
         'users': users
     })

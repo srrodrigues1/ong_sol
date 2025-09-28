@@ -14,9 +14,9 @@ def logar(request):
         password = request.POST.get("senha")
 
         formated_cpf = cpf.replace('.', '')
-        formated_cpf = cpf.replace('-', '')
+        formated_cpf = formated_cpf.replace('-', '')
 
-        user = User.objects.filter(cpf=cpf).first()
+        user = User.objects.filter(cpf=formated_cpf).first()
 
         if user:
             if check_password(password, user.password):

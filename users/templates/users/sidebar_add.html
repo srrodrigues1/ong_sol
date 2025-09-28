@@ -67,7 +67,6 @@ document.getElementById('form-usuario').addEventListener('submit', function(e) {
     const form = e.target;
 
     handleFormOnSave();
-    console.log(form);
     if (validateFormAdd(form) > 0) {
         handleFormOnResponse(0);
         return;
@@ -137,6 +136,7 @@ function resetForm(form) {
 
 function validateFormAdd(form) {
 
+    var errors = 0;
     const username = form.username.value.trim();
     const cpf = form.cpf.value.trim();
     const email = form.email.value.trim();
@@ -145,26 +145,26 @@ function validateFormAdd(form) {
 
     if (!username) {
         form.username.style = 'border-color: #eb0000';
-        return 1;
+        errors++;
     }
     if (!cpf) {
         form.cpf.style = 'border-color: #eb0000';
-        return 1;
+        errors++;
     }
     if (!email) {
         form.email.style = 'border-color: #eb0000';
-        return 1;
+        errors++;
     }
     if (!senha) {
         form.senha.style = 'border-color: #eb0000';
-        return 1;
+        errors++;
     }
     if (!funcao) {
         form.funcao.style = 'border-color: #eb0000';
-        return 1;
+        errors++;
     }
 
-    return 0;
+    return errors;
 }
 
 function openAddSidebar() {

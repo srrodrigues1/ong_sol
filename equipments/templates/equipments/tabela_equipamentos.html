@@ -30,11 +30,11 @@
             <td class="equipment-row" title="{{ equipment.name }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.name }}</td>
              <td>
                 {% if equipment.type == 0 %}
-                    <div>Cadeira de Rodas</div>
+                    <div title="Cadeira de Rodas" data-bs-toggle="tooltip">Cadeira de Rodas</div>
                 {% elif equipment.type == 1 %}
-                    <div>Muletas</div>
+                    <div title="Muletas" data-bs-toggle="tooltip">Muletas</div>
                 {% else %}
-                    <div>Cama Hospitalar</div>
+                    <div title="Cama Hospitalar" data-bs-toggle="tooltip">Cama Hospitalar</div>
                 {% endif %}
             </td>
             <td class="equipment-row" title="{{ equipment.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.location }}</td>
@@ -54,8 +54,9 @@
                     <div class="equipment-broken">Avariado</div>
                 {% endif %}
             </td>
-            <td>{{ equipment.create_date|date:"d/m/Y H:i" }}</td>
+            <td title="{{ equipment.create_date|date:'d/m/Y H:i' }}" data-bs-toggle="tooltip">{{ equipment.create_date|date:"d/m/Y H:i" }}</td>
             <td style="text-align: center">
+                <a href="#" class="text-secondary me-2"><i class="fas fa-file-invoice"></i></a>
                 <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
                 <a href="#" class="text-danger btn-excluir" data-id="{{ equipment.id }}"><i class="fa fa-trash"></i></a>
             </td>

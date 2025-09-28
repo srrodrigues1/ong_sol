@@ -119,8 +119,8 @@
                 return response.json();
             } else {
                 // Se o backend retornou HTML, faça o redirecionamento
-                window.location.href = '/users';
-                return;
+                // window.location.href = '/users';
+                // return;
             }
         }).then(data => {
             if (!data) return;  // Se redirecionou, nada a fazer
@@ -131,8 +131,8 @@
             if (data.success) {
                 form.reset();
                 toastr.success(data.success);
-                atualizarTabelaUsuarios();
-                closeEditSidebar();
+                // atualizarTabelaUsuarios();
+                // closeEditSidebar();
             } else if (data.error) {
                 let listaErros = '';
 

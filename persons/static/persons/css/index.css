@@ -218,7 +218,7 @@ table.table-sm thead tr th {
     text-overflow: ellipsis;
 }
 
-.user-active {
+.person-active {
     background-color: #00FF371C;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
@@ -227,7 +227,7 @@ table.table-sm thead tr th {
     text-align: center;
 }
 
-.user-inactive {
+.person-inactive {
     background-color: #ef080834;
     border: 1px solid #eeeeeeab;
     border-radius: 10px;
