@@ -44,6 +44,7 @@
         {% include 'menu.html' %}
         {% include 'equipments/sidebar_add.html' %}
         {% include 'equipments/sidebar_edit.html' %}
+        {% include 'equipments/sidebar_loan.html' %}
 
         <div id="sidebar-content"></div>
         <div id="sidebar-edit-content"></div>
@@ -126,9 +127,40 @@
 
         $('#tabela-equipamentos').on('click', 'a.text-secondary', function(e) {
             e.preventDefault();
+            const equipmentId = $(this).closest('tr').data('id');
+            if (!equipmentId) return;
 
-            
-        })
+            fetch(`/equipments/loan/${equipmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+
+                    document.getElementById('id_loan').value = data.equipment.id;
+                    document.getElementById('name_loan').value = data.equipment.name;
+
+                    const requesterSelect = document.getElementById('requester_loan');
+                    requesterSelect.innerHTML = '';
+
+                    const optEmpty = document.createElement('option');
+                    optEmpty.value = '';
+                    optEmpty.textContent = 'Selecione um solicitante';
+                    requesterSelect.appendChild(optEmpty);
+
+                    data.persons.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.name;
+                        requesterSelect.appendChild(opt);
+                    });
+
+                    if (data.loan && data.loan.requester_id) {
+                        requesterSelect.value = data.loan.requester_id;
+                    }
+
+                    openLoanSidebar();
+                })
+                .catch(error => console.error('Erro ao buscar dados do empréstimo:', error));
+        });
 
         $('#tabela-equipamentos').on('click', 'a.text-danger', function (e) {
             e.preventDefault();

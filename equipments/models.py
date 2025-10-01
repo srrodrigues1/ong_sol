@@ -1,7 +1,7 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
 
-# from .models import Person
+from persons.models import Person
 
 class Equipment(models.Model):
     name = models.CharField(max_length=50)
@@ -28,11 +28,11 @@ class Equipment(models.Model):
         return self.name
     
 class Loans(models.Model):
-    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name="loans")
-    # requester = models.ForeignKey(Person, ...)
+    equipment = models.ForeignKey(Equipment, on_delete=models.PROTECT, related_name="loans")
+    requester = models.ForeignKey(Person, on_delete=models.PROTECT, related_name="loans")
     loan_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, default="ativo")  # ativo, devolvido, atrasado
+    status = models.CharField(max_length=20, default="ativo")
     history = HistoricalRecords()
 
     def __str__(self):

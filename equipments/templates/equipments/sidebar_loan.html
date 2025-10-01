@@ -7,13 +7,13 @@
 </head>
 </html>
 
-<div id="sidebar" class="sidebar-container">
+<div id="sidebar-loan" class="sidebar-container">
 
     <div class="sidebar-overlay"></div> <!-- onclick="closeSidebar() -->
 
     <div class="sidebar-content">
         <div class="sidebar-header d-flex justify-content-between align-items-center">
-            <h2 id="sidebar-title" class="sidebar-title">Criar Equipamento</h2>
+            <h2 id="sidebar-title" class="sidebar-title">Fazer empréstimo</h2>
             <button class="btn-close" onclick="closeAddSidebar()"></button>
         </div>
 
@@ -24,38 +24,30 @@
         <div id="mensagem-usuario"></div>
         
         <div class="sidebar-body">
-            <form id="form-equipamento" class="form-equipamento" method="post" action="{% url 'criar_equipamento' %}">
+            
+            <form id="form-emprestimo" class="form-emprestimo" method="post">
                 {% csrf_token %}
-                <div class="mb-2">
-                    <label for="name" class="form-label">Nome</label>
-                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" id="name" placeholder="Nome" name="name">
+                <div style="display: none;">
+                    <label for="id_loan" class="form-label">Id</label>
+                    <input type="text" class="form-control" disabled id="id_loan" name="id">
                 </div>
                 <div class="mb-2">
-                    <label for="type" class="form-label">Tipo</label>
-                    <select onchange="removeRequiredStyle(this)" class="form-select" id="type" name="type">
-                        <option value="0" selected>Cadeira de Rodas</option>
-                        <option value="1">Muletas</option>
-                        <option value="2">Cama Hospitalar</option>
+                    <label for="name_loan" class="form-label">Nome</label>
+                    <input type="text" onkeydown="removeRequiredStyle(this)" disabled class="form-control" id="name_loan" placeholder="Nome" name="name_loan">
+                </div>
+                <div class="mb-2">
+                    <label for="requester_loan" class="form-label">Solicitante</label>
+                    <select class="form-select" id="requester_loan" name="loan_requester">
+                        <option value="">Selecione um solicitante</option>
                     </select>
                 </div>
-                <div class="mb-2">
-                    <label for="location" class="form-label">Localização</label>
-                    <input type="location" onkeydown="removeRequiredStyle(this)" class="form-control" id="location" placeholder="Localização" name="location">
-                </div>
-                <div class="">
-                    <label for="status" class="form-label">Status</label>
-                    <select onchange="removeRequiredStyle(this)"  class="form-select" id="status" name="status">
-                        <option value="1" selected>Ativo</option>
-                        <option value="0">Inativo</option>
-                        <option value="2">Emprestado</option>
-                        <option value="3">Em conserto</option>
-                        <option value="4">Extraviado</option>
-                        <option value="5">Avariado</option>
-                    </select>
-                </div>
-
+                <!-- <div class="mb-2">
+                    <label for="requester_loan" class="form-label">Solicitante</label>
+                    <input type="requester_loan" onkeydown="removeRequiredStyle(this)" class="form-control" id="requester_loan" placeholder="Solicitante" name="loan_requester">
+                </div> -->
+                
                 <div class="form-buttons d-flex justify-content-end mt-4">
-                    <button id="btn-cancelar-add" type="button" class="btn btn-outline-success me-2" onclick="closeAddSidebar()">Cancelar</button>
+                    <button id="btn-cancelar-add" type="button" class="btn btn-outline-success me-2" onclick="closeLoanSidebar()">Cancelar</button>
                     <button id="btn-salvar-add" type="submit" class="btn btn-success">Salvar</button>
                 </div>
             </form>
@@ -65,7 +57,7 @@
 
 <script>
 
-    document.getElementById('form-equipamento').addEventListener('submit', function(e) {
+    document.getElementById('form-emprestimo').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = e.target;
 
@@ -77,17 +69,25 @@
         toastr.options.preventDuplicates = true;
 
         const formData = new FormData(form);
-        
-        fetch('/equipments/novo', {
+
+        const equipmentId = document.getElementById("id_loan").value;
+        const requesterId = document.getElementById("requester_loan").value;
+        formData.append("equipment_id", equipmentId);
+        formData.append("requester_id", requesterId);
+
+        fetch(`/equipments/loan/save/${equipmentId}/`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
         })
         .then(response => {
             handleFormOnResponse(1);
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json();
-            } 
+            }
         })
         .then(data => {
             if (!data) return;
@@ -95,11 +95,11 @@
             const mensagemDiv = document.getElementById('mensagem-usuario');
             mensagemDiv.innerHTML = '';
 
-            if (data.status == "success") {
+            if (data.status === "success") {
                 form.reset();
                 toastr.success(data.message);
                 atualizarTabelaEquipamentos();
-                closeAddSidebar();
+                closeLoanSidebar();
             } else if (data.error) {
                 let listaErros = '';
 
@@ -114,10 +114,9 @@
             }
         })
         .catch(error => {
-            // console.error('Erro:', error);
+            console.error('Erro:', error);
         });
-
-    });
+    })
 
     function removeRequiredStyle(input) {
         input.style = 'border-color: #ced4da';
@@ -165,59 +164,38 @@
         return 0;
     }
 
-    function openAddSidebar() {
-        document.getElementById('sidebar').classList.add('active');
+    function openLoanSidebar() {
+        document.getElementById('sidebar-loan').classList.add('active');
     }
 
-    function closeAddSidebar() {
-        let form = $('#form-equipamento');
+    function closeLoanSidebar() {
+        let form = $('#form-emprestimo');
         resetForm(form);
 
-        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebar-loan').classList.remove('active');
     }
 
-    function formatarCPF() {
-        const cpfInput = document.getElementById("cpf");
-        let cpf = cpfInput.value.replace(/\D/g, ''); // Remove não-números
+    // function handleFormOnSave() {
+    //     $("#loading-overlay-add").show();
+    //     $("#btn-cancelar-add").prop("disabled", true);
+    //     $("#btn-salvar-add").prop("disabled", true);
+    // }
 
-        if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
+    // function handleFormOnResponse(serverSideValidation) {
 
-        let cpfFormatado = '';
+    //     if (serverSideValidation == 1) {
+    //         setTimeout(function() {
+    //             $("#loading-overlay-add").hide();
+    //             $("#btn-cancelar-add").prop("disabled", false);
+    //             $("#btn-salvar-add").prop("disabled", false);   
+    //         }, 500);
 
-        if (cpf.length > 9) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
-        } else if (cpf.length > 6) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
-        } else if (cpf.length > 3) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{0,3})/, "$1.$2");
-        } else {
-            cpfFormatado = cpf;
-        }
+    //         return;
+    //     }
 
-        cpfInput.value = cpfFormatado;
-    }
-
-    function handleFormOnSave() {
-        $("#loading-overlay-add").show();
-        $("#btn-cancelar-add").prop("disabled", true);
-        $("#btn-salvar-add").prop("disabled", true);
-    }
-
-    function handleFormOnResponse(serverSideValidation) {
-
-        if (serverSideValidation == 1) {
-            setTimeout(function() {
-                $("#loading-overlay-add").hide();
-                $("#btn-cancelar-add").prop("disabled", false);
-                $("#btn-salvar-add").prop("disabled", false);   
-            }, 500);
-
-            return;
-        }
-
-        $("#loading-overlay-add").hide();
-        $("#btn-cancelar-add").prop("disabled", false);
-        $("#btn-salvar-add").prop("disabled", false);    
-    }
+    //     $("#loading-overlay-add").hide();
+    //     $("#btn-cancelar-add").prop("disabled", false);
+    //     $("#btn-salvar-add").prop("disabled", false);    
+    // }
 
 </script>

@@ -113,6 +113,11 @@ input:required:invalid {
     position: relative;
 }
 
+.form-emprestimo {
+    height: 100%;
+    position: relative;
+}
+
 .sidebar-body input:focus,
 .sidebar-body select:focus {
     border-color: #28a745;

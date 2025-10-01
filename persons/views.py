@@ -78,6 +78,7 @@ def pessoas_parciais(request):
     persons = Person.objects.all().order_by("id")
     for person in persons:
         person.cpf = format_cpf(person.cpf)
+
     return render(request, 'persons/tabela_pessoas.html', {
         'persons': persons
     })

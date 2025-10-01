@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 import csv
+import json
 
 def login_required(view_func):
     @wraps(view_func)
@@ -16,14 +17,12 @@ def login_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-from .models import Equipment
+from .models import Equipment, Loans
+from persons.models import Person
 
 @login_required
 def index(request):
-    equipments = Equipment.objects.all().order_by("id")
-    return render(request, 'equipments/index.html', {
-        'equipment': equipments
-    })
+    return render(request, 'equipments/index.html', {})
 
 @login_required
 def criar_equipamento(request):
@@ -45,29 +44,34 @@ def criar_equipamento(request):
 
 @login_required
 def equipamentos_parciais(request):
-    equipments = Equipment.objects.all().order_by("id")
+    equipments = Equipment.objects.prefetch_related("loans__requester").order_by("id")
     return render(request, 'equipments/tabela_equipamentos.html', {
         'equipments': equipments
     })
 
 @login_required
+@require_POST
 def dados_equipamento(request, equipment_id):
     try:
-        equipment = Equipment.objects.get(id=equipment_id)
+        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+
+        loan = equipment.loans.first()
+        requester_name = loan.requester.name if loan else None
+
         data = {
             'id': equipment.id,
             'name': equipment.name,
             'type': equipment.type,
             'location': equipment.location,
-            'requester': 1,# equipment.requester,
+            'requester': requester_name,
             'status': equipment.status,
             'create_date': equipment.create_date,
         }
         return JsonResponse(data)
-    except Equipment.DoesNotExist:
-        return JsonResponse({'error': 'Usuário não encontrado'}, status=404)
-    
 
+    except Equipment.DoesNotExist:
+        return JsonResponse({'error': 'Equipamento não encontrado'}, status=404)
+    
 @login_required
 @require_POST
 def atualizar_equipamento(request, equipment_id):
@@ -123,3 +127,54 @@ def excluir_equipamento(request, equipment_id):
     except ProtectedError:
         msg = 'Não foi possível excluir este equipamento: existem registros vinculados a ele.'
         return JsonResponse({'error': msg}, status=400)
+
+@login_required
+def fazer_emprestimo(request, equipment_id):
+    if request.method == "POST":
+        requester_id = request.POST.get('requester_id')
+
+        try:
+            equipment = Equipment.objects.get(id=equipment_id)
+            requester = Person.objects.get(id=requester_id)
+
+            loan = Loans.objects.create(
+                equipment=equipment,
+                requester=requester,
+            )
+
+            return JsonResponse({"success": True, "loan_id": loan.id})
+        except (Equipment.DoesNotExist, Person.DoesNotExist):
+            return JsonResponse({"error": "Dados inválidos"}, status=400)
+
+def dados_emprestimo(request, equipment_id):
+    try:
+        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+
+        # Pega o empréstimo ativo (se houver)
+        loan = equipment.loans.filter(status=1).first()  # supondo que tenha campo "active"
+        requester_id = loan.requester.id if loan else None
+
+        # Lista de todas as pessoas (para popular o select no form)
+        persons = Person.objects.all().order_by("name")
+        persons_data = [{"id": p.id, "name": p.name} for p in persons]
+
+        data = {
+            "equipment": {
+                "id": equipment.id,
+                "name": equipment.name,
+                "type": equipment.type,
+                "location": equipment.location,
+                "status": equipment.status,
+                "create_date": equipment.create_date,
+            },
+            "loan": {
+                "id": loan.id if loan else None,
+                "requester_id": requester_id,
+                "requester_name": loan.requester.name if loan else None,
+            },
+            "persons": persons_data,
+        }
+        return JsonResponse(data)
+
+    except Equipment.DoesNotExist:
+        return JsonResponse({'error': 'Equipamento não encontrado'}, status=404)

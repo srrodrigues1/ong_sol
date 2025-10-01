@@ -103,9 +103,6 @@
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json();
-            } else {
-                window.location.href = '/users';
-                return;
             }
         }).then(data => {
             if (!data) return;
