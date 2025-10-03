@@ -24,7 +24,7 @@
         {% for user in users %}
         <tr data-id="{{ user.id }}">
             <td class="user-row td-truncate" title="{{ user.username }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.username }}</td>
-            <td class="user-row" title="{{ user.formatted_cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.formatted_cpf }}</td>
+            <td class="user-row td-truncate" title="{{ user.formatted_cpf }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.formatted_cpf }}</td>
             <td class="user-row td-truncate" title="{{ user.email }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ user.email }}</td>
             <td>
                 {% if user.role_id == 1 %}

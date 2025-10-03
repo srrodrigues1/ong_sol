@@ -27,7 +27,7 @@
     <tbody id="usuarios-body">
         {% for equipment in equipments %}
         <tr data-id="{{ equipment.id }}">
-            <td class="equipment-row" title="{{ equipment.name }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.name }}</td>
+            <td class="equipment-row td-truncate" title="{{ equipment.name }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.name }}</td>
              <td>
                 {% if equipment.type == 0 %}
                     <div title="Cadeira de Rodas" data-bs-toggle="tooltip">Cadeira de Rodas</div>
@@ -37,8 +37,8 @@
                     <div title="Cama Hospitalar" data-bs-toggle="tooltip">Cama Hospitalar</div>
                 {% endif %}
             </td>
-            <td class="equipment-row" title="{{ equipment.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.location }}</td>
-            <td class="equipment-row" title="{{ equipment.requester }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.requester }}</td>
+            <td class="equipment-row td-truncate" title="{{ equipment.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.location }}</td>
+            <td class="equipment-row td-truncate" title="{{ equipment.requester }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.requester }}</td>
             <td>
                 {% if equipment.status == 0 %}
                     <div class="equipment-inactive">Inativo</div>

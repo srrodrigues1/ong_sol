@@ -32,7 +32,11 @@ class Loans(models.Model):
     requester = models.ForeignKey(Person, on_delete=models.PROTECT, related_name="loans")
     loan_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField(null=True, blank=True)
-    status = models.CharField(max_length=20, default="ativo")
+    STATUS_CHOICES = [
+        (0, 'Ativo'),
+        (1, 'Devolvido'),
+    ]
+    status = models.IntegerField(choices=STATUS_CHOICES, default=0)
     history = HistoricalRecords()
 
     def __str__(self):
