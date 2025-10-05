@@ -11,5 +11,6 @@ urlpatterns = [
     path("delete/<int:equipment_id>/", views.excluir_equipamento, name="excluir_equipamento"),
     path("loan/<int:equipment_id>/", views.dados_emprestimo, name="dados_emprestimo"),
     path("loan/save/<int:equipment_id>/", views.fazer_emprestimo, name="fazer_emprestimo"),
+    path("loan/delete/<int:equipment_id>/", views.remover_emprestimo, name="remover_emprestimo"),
     path("partials", views.equipamentos_parciais, name="equipamentos_parciais")
 ]

@@ -9,6 +9,14 @@ from django.utils import timezone
 
 import csv
 import json
+import re
+from datetime import datetime
+
+def format_cpf(cpf: str) -> str:
+    cpf = re.sub(r'\D', '', cpf)  # só números
+    if len(cpf) == 11:
+        return f"{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}"
+    return cpf
 
 def login_required(view_func):
     @wraps(view_func)
@@ -49,7 +57,7 @@ def equipamentos_parciais(request):
 
     equipamentos_com_requester = []
     for eq in equipments:
-        loan = eq.loans.filter(status=0, return_date__isnull=True).first()
+        loan = eq.loans.filter(status=1, return_date__isnull=True).first()
         requester_name = loan.requester.name if loan else ""
         
         equipamentos_com_requester.append({
@@ -68,17 +76,19 @@ def equipamentos_parciais(request):
 @login_required
 def dados_equipamento(request, equipment_id):
     try:
-        equipment = Equipment.objects.get(id=equipment_id)# Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
 
-        # loan = equipment.loans.first()
-        # requester_name = loan.requester.name if loan else None
+        loaned = False
+        loan = equipment.loans.filter(status=1, return_date__isnull=True).first()
+        if loan:
+            loaned = True
 
         data = {
             'id': equipment.id,
             'name': equipment.name,
             'type': equipment.type,
             'location': equipment.location,
-            # 'requester': requester_name,
+            'loaned': loaned,
             'status': equipment.status,
             'create_date': equipment.create_date
         }
@@ -141,7 +151,7 @@ def excluir_equipamento(request, equipment_id):
 
     except ProtectedError:
         msg = 'Não foi possível excluir este equipamento: existem registros vinculados a ele.'
-        return JsonResponse({'error': msg}, status=400)
+        return JsonResponse({'error': msg})
 
 @login_required
 def fazer_emprestimo(request, equipment_id):
@@ -152,25 +162,17 @@ def fazer_emprestimo(request, equipment_id):
             equipment = Equipment.objects.get(id=equipment_id)
             requester = Person.objects.get(id=requester_id)
 
-            with transaction.atomic():
-                active_loan = Loans.objects.filter(equipment=equipment, return_date__isnull=True).first()
-
-                if active_loan:
-                    active_loan.return_date = timezone.now()
-                    active_loan.status = 1
-                    active_loan.save()
-
-            loan = Loans.objects.create(
+            Loans.objects.create(
                 equipment=equipment,
                 requester=requester,
-                status=0
+                status=1
             )
     
             equipment.location = f"{requester.street}, {requester.st_number} - {requester.district} - {requester.city}"
             equipment.status = 2
             equipment.save()
 
-            return JsonResponse({"success": True, "loan_id": loan.id})
+            return JsonResponse({"status": "success", "message": f"Equipamento {equipment.name} emprestado com sucesso para {requester.name}!"})
         except (Equipment.DoesNotExist, Person.DoesNotExist):
             return JsonResponse({"error": "Dados inválidos"}, status=400)
 
@@ -178,13 +180,14 @@ def dados_emprestimo(request, equipment_id):
     try:
         equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
 
-        # Pega o empréstimo ativo (se houver)
-        loan = equipment.loans.filter(status=1).first()  # supondo que tenha campo "active"
+        loan = equipment.loans.filter(status=1, return_date__isnull=True).first()
         requester_id = loan.requester.id if loan else None
 
-        # Lista de todas as pessoas (para popular o select no form)
         persons = Person.objects.all().order_by("name")
-        persons_data = [{"id": p.id, "name": p.name} for p in persons]
+        persons_data = [
+            {"id": p.id, "name": p.name, "cpf": format_cpf(p.cpf)} 
+            for p in persons
+        ]
 
         data = {
             "equipment": {
@@ -199,6 +202,7 @@ def dados_emprestimo(request, equipment_id):
                 "id": loan.id if loan else None,
                 "requester_id": requester_id,
                 "requester_name": loan.requester.name if loan else None,
+                "requester_cpf": format_cpf(loan.requester.cpf) if loan else None,
             },
             "persons": persons_data,
         }
@@ -206,3 +210,41 @@ def dados_emprestimo(request, equipment_id):
 
     except Equipment.DoesNotExist:
         return JsonResponse({'error': 'Equipamento não encontrado'}, status=404)
+    
+@login_required
+def remover_emprestimo(request, equipment_id):
+    if request.method != "POST":
+        return JsonResponse({'error': 'Método não permitido'}, status=405)
+
+    return_date = request.POST.get("returnDate")
+    try:
+        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+
+        with transaction.atomic():
+            active_loan = Loans.objects.filter(
+                equipment=equipment,
+                status=1,
+                return_date__isnull=True
+            ).first()
+
+            if not active_loan:
+                return JsonResponse({'error': 'Nenhum empréstimo ativo encontrado.'}, status=404)
+
+            # Finaliza o empréstimo
+            active_loan.return_date = datetime.strptime(return_date, '%d/%m/%Y')
+            active_loan.status = 2  # exemplo: 2 = finalizado
+            active_loan.save()
+
+            # Atualiza o equipamento
+            equipment.status = 1  # disponível novamente
+            equipment.location = ""  # ou o local padrão que você definir
+            equipment.save()
+
+        return JsonResponse({"status": "success", "message": "Empréstimo removido com sucesso." })
+
+    except Equipment.DoesNotExist:
+        return JsonResponse({'error': 'Equipamento não encontrado.'}, status=404)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Erro ao remover empréstimo: {str(e)}'}, status=500)
+

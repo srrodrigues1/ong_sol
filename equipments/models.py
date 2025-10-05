@@ -33,10 +33,10 @@ class Loans(models.Model):
     loan_date = models.DateTimeField(auto_now_add=True)
     return_date = models.DateTimeField(null=True, blank=True)
     STATUS_CHOICES = [
-        (0, 'Ativo'),
-        (1, 'Devolvido'),
+        (1, 'Emprestado'),
+        (2, 'Devolvido'),
     ]
-    status = models.IntegerField(choices=STATUS_CHOICES, default=0)
+    status = models.IntegerField(choices=STATUS_CHOICES, default=1)
     history = HistoricalRecords()
 
     def __str__(self):

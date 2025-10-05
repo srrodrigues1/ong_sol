@@ -9,7 +9,7 @@
 
 <div id="sidebar-loan" class="sidebar-container">
 
-    <div class="sidebar-overlay"></div> <!-- onclick="closeSidebar() -->
+    <div class="sidebar-overlay"></div>
 
     <div class="sidebar-content">
         <div class="sidebar-header d-flex justify-content-between align-items-center">
@@ -41,14 +41,18 @@
                         <option value="">Selecione um solicitante</option>
                     </select>
                 </div>
-                <!-- <div class="mb-2">
-                    <label for="requester_loan" class="form-label">Solicitante</label>
-                    <input type="requester_loan" onkeydown="removeRequiredStyle(this)" class="form-control" id="requester_loan" placeholder="Solicitante" name="loan_requester">
-                </div> -->
+                <div class="mb-2">
+                    <label for="cpf_loan" class="form-label">CPF</label>
+                    <input type="text" disabled class="form-control" id="cpf_loan" placeholder="CPF" name="cpf_loan">
+                </div>
+                <div class="mb-2" id="dt_return_div">
+                    <label for="dt_return_loan" class="form-label">Data de retorno do empréstimo</label>
+                    <input type="text" class="form-control" id="dt_return_loan" placeholder="dd/mm/yyyy" name="dt_return_loan" maxlength="10">
+                </div>
                 
                 <div class="form-buttons d-flex justify-content-end mt-4">
-                    <button id="btn-cancelar-add" type="button" class="btn btn-outline-success me-2" onclick="closeLoanSidebar()">Cancelar</button>
-                    <button id="btn-salvar-add" type="submit" class="btn btn-success">Salvar</button>
+                    <button id="btn-cancelar-loan" type="button" class="btn btn-outline-success me-2" onclick="closeLoanSidebar()">Cancelar</button>
+                    <button id="btn-salvar-loan" type="submit" class="btn btn-success">Salvar</button>
                 </div>
             </form>
         </div>
@@ -56,22 +60,49 @@
 </div>
 
 <script>
+    toastr.options.closeButton = true;
+    toastr.options.timeOut = 10000;
+    toastr.options.extendedTimeOut = 0;
+    toastr.options.preventDuplicates = true;
 
-    document.getElementById('form-emprestimo').addEventListener('submit', function(e) {
+    // --- FORMATADOR DE DATA ---
+    document.getElementById('dt_return_loan').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, ''); // remove tudo que não for número
+        if (value.length > 8) value = value.slice(0, 8);
+
+        let formatted = '';
+        if (value.length > 4) {
+            formatted = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (value.length > 2) {
+            formatted = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        } else {
+            formatted = value;
+        }
+        e.target.value = formatted;
+    });
+
+    // --- EVENTO DE SALVAR OU REMOVER ---
+    const form = document.getElementById('form-emprestimo');
+    const btnSaveLoan = document.getElementById('btn-salvar-loan');
+
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
-        const form = e.target;
 
+        if (btnSaveLoan.textContent === 'Remover empréstimo') {
+            removerEmprestimo();
+            return;
+        }
+
+        fazerEmprestimo();
+    });
+
+    function fazerEmprestimo() {
         handleFormOnSave();
 
-        toastr.options.closeButton = true;
-        toastr.options.timeOut = 10000;
-        toastr.options.extendedTimeOut = 0;
-        toastr.options.preventDuplicates = true;
-
         const formData = new FormData(form);
-
         const equipmentId = document.getElementById("id_loan").value;
         const requesterId = document.getElementById("requester_loan").value;
+
         formData.append("equipment_id", equipmentId);
         formData.append("requester_id", requesterId);
 
@@ -92,9 +123,6 @@
         .then(data => {
             if (!data) return;
 
-            const mensagemDiv = document.getElementById('mensagem-usuario');
-            mensagemDiv.innerHTML = '';
-
             if (data.status === "success") {
                 form.reset();
                 toastr.success(data.message);
@@ -102,21 +130,44 @@
                 closeLoanSidebar();
             } else if (data.error) {
                 let listaErros = '';
-
                 for (let campo in data.error) {
-                    listaErros += ' - ' + data.error[campo] + '<br>'
+                    listaErros += ' - ' + data.error[campo] + '<br>';
                     const campoEl = document.getElementById(campo);
-                    if (campoEl) {
-                        campoEl.style.borderColor = '#eb0000';
-                    }
+                    if (campoEl) campoEl.style.borderColor = '#eb0000';
                 }
                 toastr.warning(listaErros);
             }
         })
-        .catch(error => {
-            console.error('Erro:', error);
-        });
-    })
+        .catch(error => console.error('Erro ao salvar empréstimo:', error));
+    }
+
+    function removerEmprestimo() {
+        const formData = new FormData(form);
+
+        const equipmentId = document.getElementById("id_loan").value;
+        const returnDate = document.getElementById("dt_return_loan").value;
+
+        formData.append("returnDate", returnDate);
+        fetch(`/equipments/loan/delete/${equipmentId}/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status == 'success') {
+                toastr.success(data.message);
+                form.reset();
+                closeLoanSidebar();
+                atualizarTabelaEquipamentos();
+            } else {
+                toastr.warning(data.error || 'Erro ao remover empréstimo.');
+            }
+        })
+        .catch(error => console.error('Erro ao remover empréstimo:', error));
+    }
 
     function removeRequiredStyle(input) {
         input.style = 'border-color: #ced4da';
@@ -125,43 +176,7 @@
     function resetForm(form) {
         form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
         form.find("select").prop("selectedIndex", 0);
-        $("#username").css("border-color", "#ced4da");
-        $("#cpf").css("border-color", "#ced4da");
-        $("#email").css("border-color", "#ced4da");
-        $("#senha").css("border-color", "#ced4da");
-        $("#funcao").css("border-color", "#ced4da");
-    }
-
-    function validateFormAdd(form) {
-
-        const username = form.username.value.trim();
-        const cpf = form.cpf.value.trim();
-        const email = form.email.value.trim();
-        const senha = form.password.value.trim();
-        const funcao = form.funcao.value;
-
-        if (!username) {
-            form.username.style = 'border-color: #eb0000';
-            return 1;
-        }
-        if (!cpf) {
-            form.cpf.style = 'border-color: #eb0000';
-            return 1;
-        }
-        if (!email) {
-            form.email.style = 'border-color: #eb0000';
-            return 1;
-        }
-        if (!senha) {
-            form.senha.style = 'border-color: #eb0000';
-            return 1;
-        }
-        if (!funcao) {
-            form.funcao.style = 'border-color: #eb0000';
-            return 1;
-        }
-
-        return 0;
+        $("#username, #cpf, #email, #senha, #funcao").css("border-color", "#ced4da");
     }
 
     function openLoanSidebar() {
@@ -171,31 +186,6 @@
     function closeLoanSidebar() {
         let form = $('#form-emprestimo');
         resetForm(form);
-
         document.getElementById('sidebar-loan').classList.remove('active');
     }
-
-    // function handleFormOnSave() {
-    //     $("#loading-overlay-add").show();
-    //     $("#btn-cancelar-add").prop("disabled", true);
-    //     $("#btn-salvar-add").prop("disabled", true);
-    // }
-
-    // function handleFormOnResponse(serverSideValidation) {
-
-    //     if (serverSideValidation == 1) {
-    //         setTimeout(function() {
-    //             $("#loading-overlay-add").hide();
-    //             $("#btn-cancelar-add").prop("disabled", false);
-    //             $("#btn-salvar-add").prop("disabled", false);   
-    //         }, 500);
-
-    //         return;
-    //     }
-
-    //     $("#loading-overlay-add").hide();
-    //     $("#btn-cancelar-add").prop("disabled", false);
-    //     $("#btn-salvar-add").prop("disabled", false);    
-    // }
-
 </script>
