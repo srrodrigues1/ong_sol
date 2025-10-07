@@ -45,9 +45,13 @@
                     <label for="cpf_loan" class="form-label">CPF</label>
                     <input type="text" disabled class="form-control" id="cpf_loan" placeholder="CPF" name="cpf_loan">
                 </div>
+                <div class="mb-2" id="dt_loaned_div">
+                    <label for="dt_loaned_loan" class="form-label">Data do Empréstimo</label>
+                    <input type="text" class="form-control" id="dt_loaned_loan" placeholder="dd/mm/aaaa" name="dt_loaned_loan" maxlength="10">
+                </div>
                 <div class="mb-2" id="dt_return_div">
-                    <label for="dt_return_loan" class="form-label">Data de retorno do empréstimo</label>
-                    <input type="text" class="form-control" id="dt_return_loan" placeholder="dd/mm/yyyy" name="dt_return_loan" maxlength="10">
+                    <label for="dt_return_loan" class="form-label">Data de retorno do Empréstimo</label>
+                    <input type="text" class="form-control" id="dt_return_loan" placeholder="dd/mm/aaaa" name="dt_return_loan" maxlength="10">
                 </div>
                 
                 <div class="form-buttons d-flex justify-content-end mt-4">
@@ -60,14 +64,14 @@
 </div>
 
 <script>
+
     toastr.options.closeButton = true;
     toastr.options.timeOut = 10000;
     toastr.options.extendedTimeOut = 0;
     toastr.options.preventDuplicates = true;
 
-    // --- FORMATADOR DE DATA ---
     document.getElementById('dt_return_loan').addEventListener('input', function (e) {
-        let value = e.target.value.replace(/\D/g, ''); // remove tudo que não for número
+        let value = e.target.value.replace(/\D/g, '');
         if (value.length > 8) value = value.slice(0, 8);
 
         let formatted = '';
@@ -81,7 +85,21 @@
         e.target.value = formatted;
     });
 
-    // --- EVENTO DE SALVAR OU REMOVER ---
+    document.getElementById('dt_loaned_loan').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 8) value = value.slice(0, 8);
+
+        let formatted = '';
+        if (value.length > 4) {
+            formatted = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (value.length > 2) {
+            formatted = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        } else {
+            formatted = value;
+        }
+        e.target.value = formatted;
+    });
+
     const form = document.getElementById('form-emprestimo');
     const btnSaveLoan = document.getElementById('btn-salvar-loan');
 
@@ -98,13 +116,14 @@
 
     function fazerEmprestimo() {
         handleFormOnSave();
-
         const formData = new FormData(form);
         const equipmentId = document.getElementById("id_loan").value;
         const requesterId = document.getElementById("requester_loan").value;
-
+        const loanDate = document.getElementById("dt_loaned_loan").value;
+        
         formData.append("equipment_id", equipmentId);
         formData.append("requester_id", requesterId);
+        formData.append("loan_date", loanDate);
 
         fetch(`/equipments/loan/save/${equipmentId}/`, {
             method: 'POST',
@@ -128,11 +147,13 @@
                 toastr.success(data.message);
                 atualizarTabelaEquipamentos();
                 closeLoanSidebar();
-            } else if (data.error) {
+            } else if (data.status === "warning") {
                 let listaErros = '';
                 for (let campo in data.error) {
+                    console.log(campo)
                     listaErros += ' - ' + data.error[campo] + '<br>';
                     const campoEl = document.getElementById(campo);
+                    console.log(campoEl);
                     if (campoEl) campoEl.style.borderColor = '#eb0000';
                 }
                 toastr.warning(listaErros);
@@ -162,8 +183,16 @@
                 form.reset();
                 closeLoanSidebar();
                 atualizarTabelaEquipamentos();
-            } else {
-                toastr.warning(data.error || 'Erro ao remover empréstimo.');
+            } else if (data.status === "warning") {
+                let listaErros = '';
+                for (let campo in data.error) {
+                    console.log(campo)
+                    listaErros += ' - ' + data.error[campo] + '<br>';
+                    const campoEl = document.getElementById(campo);
+                    console.log(campoEl);
+                    if (campoEl) campoEl.style.borderColor = '#eb0000';
+                }
+                toastr.warning(listaErros);
             }
         })
         .catch(error => console.error('Erro ao remover empréstimo:', error));
@@ -176,7 +205,7 @@
     function resetForm(form) {
         form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
         form.find("select").prop("selectedIndex", 0);
-        $("#username, #cpf, #email, #senha, #funcao").css("border-color", "#ced4da");
+        $("#name_loan, #requester_loan, #cpf_loan, #dt_loaned_loan, #dt_return_loan").css("border-color", "#ced4da");
     }
 
     function openLoanSidebar() {

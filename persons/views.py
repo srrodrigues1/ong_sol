@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from .models import Person, Documents
 
 import re
+from datetime import datetime
 
 def format_cpf(cpf: str) -> str:
     cpf = re.sub(r'\D', '', cpf)  # só números
@@ -38,7 +39,7 @@ def criar_pessoa(request):
         formated_cpf = formated_cpf.replace('-', '')
 
         formated_phone = phone.replace('-', '')
-        formated_phone = formated_phone.strip()
+        formated_phone = formated_phone.strip("")
 
         if Person.objects.filter(cpf=formated_cpf).exists():
             erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
@@ -64,6 +65,7 @@ def criar_pessoa(request):
             street=request.POST.get("street"),
             st_number=request.POST.get("st_number"),
             cep=request.POST.get("cep"),
+            birth_date=datetime.strptime(request.POST.get("birth_date"), '%d/%m/%Y'),
         )
 
         for f in request.FILES.getlist("documents[]"):

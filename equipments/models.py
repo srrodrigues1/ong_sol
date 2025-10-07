@@ -30,7 +30,7 @@ class Equipment(models.Model):
 class Loans(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.PROTECT, related_name="loans")
     requester = models.ForeignKey(Person, on_delete=models.PROTECT, related_name="loans")
-    loan_date = models.DateTimeField(auto_now_add=True)
+    loan_date = models.DateTimeField(null=True, blank=True)
     return_date = models.DateTimeField(null=True, blank=True)
     STATUS_CHOICES = [
         (1, 'Emprestado'),

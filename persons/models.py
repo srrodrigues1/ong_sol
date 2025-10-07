@@ -13,6 +13,7 @@ class Person(models.Model):
     street = models.CharField(max_length=40)
     st_number = models.CharField(max_length=10)
     cep = models.CharField(max_length=8)
+    birth_date = models.DateTimeField(null=True, blank=True)
     STATUS_CHOICES = [
         (0, 'Inativo'),
         (1, 'Ativo'),

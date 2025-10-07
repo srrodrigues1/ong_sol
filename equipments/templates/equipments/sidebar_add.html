@@ -47,7 +47,6 @@
                     <select onchange="removeRequiredStyle(this)"  class="form-select" id="status" name="status">
                         <option value="1" selected>Ativo</option>
                         <option value="0">Inativo</option>
-                        <option value="2">Emprestado</option>
                         <option value="3">Em conserto</option>
                         <option value="4">Extraviado</option>
                         <option value="5">Avariado</option>
@@ -70,6 +69,10 @@
         const form = e.target;
 
         handleFormOnSave();
+        if (validateFormEdit(form) > 0) {
+            handleFormOnResponse(0);
+            return;
+        }
 
         toastr.options.closeButton = true;
         toastr.options.timeOut = 10000;
@@ -218,6 +221,23 @@
         $("#loading-overlay-add").hide();
         $("#btn-cancelar-add").prop("disabled", false);
         $("#btn-salvar-add").prop("disabled", false);    
+    }
+
+    function validateFormEdit(form) {
+
+        let invalid = 0;
+        const name = form.name.value.trim();
+        const location = form.location.value.trim();
+
+        if (!name) {
+            form.name.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!location) {
+            form.location.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        return invalid;
     }
 
 </script>

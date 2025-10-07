@@ -12,6 +12,13 @@ import json
 import re
 from datetime import datetime
 
+def is_valid_date(date_str):
+    try:
+        datetime.strptime(date_str, "%d/%m/%Y")
+        return True
+    except (ValueError, TypeError):
+        return False
+
 def format_cpf(cpf: str) -> str:
     cpf = re.sub(r'\D', '', cpf)  # só números
     if len(cpf) == 11:
@@ -110,13 +117,17 @@ def atualizar_equipamento(request, equipment_id):
 
         equipment = get_object_or_404(Equipment, id=equipment_id)
 
-        equipment.name = name
-        equipment.type = type
-        equipment.location = location
-        equipment.status = status
+        if name:
+            equipment.name = name
+        if type:
+            equipment.type = type
+        if location:        
+            equipment.location = location
+        if status:
+            equipment.status = status
 
         equipment.save()
-        return JsonResponse({'success': f"Equipamento {name} atualizado com sucesso!"})
+        return JsonResponse({'success': f"Equipamento {equipment.name} atualizado com sucesso!"})
 
     return JsonResponse({'error': 'Método não permitido'}, status=405)
 
@@ -157,6 +168,11 @@ def excluir_equipamento(request, equipment_id):
 def fazer_emprestimo(request, equipment_id):
     if request.method == "POST":
         requester_id = request.POST.get('requester_id')
+        loan_date = request.POST.get('loan_date')
+
+        if not is_valid_date(loan_date):
+            errors = {"dt_loaned_loan": "A data precisa estar no formato dd/mm/aaaa!"}
+            return JsonResponse({"status": "warning", "error": errors})
 
         try:
             equipment = Equipment.objects.get(id=equipment_id)
@@ -165,7 +181,8 @@ def fazer_emprestimo(request, equipment_id):
             Loans.objects.create(
                 equipment=equipment,
                 requester=requester,
-                status=1
+                loan_date=datetime.strptime(loan_date, '%d/%m/%Y'),
+                status=1 
             )
     
             equipment.location = f"{requester.street}, {requester.st_number} - {requester.district} - {requester.city}"
@@ -203,6 +220,7 @@ def dados_emprestimo(request, equipment_id):
                 "requester_id": requester_id,
                 "requester_name": loan.requester.name if loan else None,
                 "requester_cpf": format_cpf(loan.requester.cpf) if loan else None,
+                "loan_date": loan.loan_date.strftime("%d/%m/%Y") if loan and loan.loan_date else None,
             },
             "persons": persons_data,
         }
@@ -217,6 +235,10 @@ def remover_emprestimo(request, equipment_id):
         return JsonResponse({'error': 'Método não permitido'}, status=405)
 
     return_date = request.POST.get("returnDate")
+    if not is_valid_date(return_date):
+        errors = {"dt_return_loan": "A data precisa estar no formato dd/mm/aaaa!"}
+        return JsonResponse({"status": "warning", "error": errors})
+
     try:
         equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
 
@@ -230,14 +252,12 @@ def remover_emprestimo(request, equipment_id):
             if not active_loan:
                 return JsonResponse({'error': 'Nenhum empréstimo ativo encontrado.'}, status=404)
 
-            # Finaliza o empréstimo
             active_loan.return_date = datetime.strptime(return_date, '%d/%m/%Y')
-            active_loan.status = 2  # exemplo: 2 = finalizado
+            active_loan.status = 2
             active_loan.save()
 
-            # Atualiza o equipamento
-            equipment.status = 1  # disponível novamente
-            equipment.location = ""  # ou o local padrão que você definir
+            equipment.status = 1
+            equipment.location = "Ong Sol"
             equipment.save()
 
         return JsonResponse({"status": "success", "message": "Empréstimo removido com sucesso." })

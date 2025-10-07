@@ -118,11 +118,12 @@
                     document.getElementById('type_edit').value = data.type;
                     document.getElementById('location_edit').value = data.location;
                     document.getElementById('status_edit').value = data.status;
+
                     if (data.loaned) {
-                        document.getElementById('status-message').style.display = 'block';
-                        document.getElementById('status-message').text = 'xx';
+                        document.getElementById('status-message').style.display = 'contents';
+                    } else {
+                        document.getElementById('status-message').style.display = 'none';
                     }
-                    
 
                     document.getElementById('sidebar-title').innerText = "Editar equipamento";
                     openEditSidebar();
@@ -135,65 +136,80 @@
             const equipmentId = $(this).closest('tr').data('id');
             if (!equipmentId) return;
 
-        fetch(`/equipments/loan/${equipmentId}`)
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('id_loan').value = data.equipment.id;
-                document.getElementById('name_loan').value = data.equipment.name;
+            fetch(`/equipments/loan/${equipmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.equipment.status);
+                    if (data.equipment.status != 2 && data.equipment.status != 1) {
+                        toastr.warning("O equipamento não pode ser emprestado devido estar com o status <b>" + obterStatus(data.equipment.status) + "<b>")
+                        return;
+                    }
+                    document.getElementById('id_loan').value = data.equipment.id;
+                    document.getElementById('name_loan').value = data.equipment.name;
 
-                const requesterSelect = document.getElementById('requester_loan');
-                const cpfField = document.getElementById('cpf_loan');
-                const btnSaveLoan = document.getElementById('btn-salvar-loan');
-                const dateLabel = document.getElementById('dt_return_div');
-                const dateInput = document.getElementById('dt_return_loan');
+                    const requesterSelect = document.getElementById('requester_loan');
+                    const cpfField = document.getElementById('cpf_loan');
+                    const btnSaveLoan = document.getElementById('btn-salvar-loan');
 
-                requesterSelect.innerHTML = '';
+                    const dateLoanedInput = document.getElementById('dt_loaned_loan');
+                    const dateLoanedLabel = document.getElementById('dt_loaned_div');
 
-                const optEmpty = document.createElement('option');
-                optEmpty.value = '';
-                optEmpty.textContent = 'Selecione um solicitante';
-                requesterSelect.appendChild(optEmpty);
+                    const dateReturnLabel = document.getElementById('dt_return_div');
+                    const dateReturnInput = document.getElementById('dt_return_loan');
 
-                const requesterData = {};
+                    requesterSelect.innerHTML = '';
 
-                data.persons.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.id;
-                    opt.textContent = p.name;
-                    requesterSelect.appendChild(opt);
+                    const optEmpty = document.createElement('option');
+                    optEmpty.value = '';
+                    optEmpty.textContent = 'Selecione um solicitante';
+                    requesterSelect.appendChild(optEmpty);
 
-                    requesterData[p.id] = p.cpf;
-                });
+                    const requesterData = {};
 
-                if (data.loan && data.loan.requester_id) {
-                    requesterSelect.value = data.loan.requester_id;
-                    cpfField.value = data.loan.requester_cpf;
-                    dateLabel.style.display = "block";
-                    dateInput.required = true;
+                    data.persons.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.name;
+                        requesterSelect.appendChild(opt);
 
-                    requesterSelect.disabled = true;
-                    cpfField.disabled = true;
+                        requesterData[p.id] = p.cpf;
+                    });
 
-                    btnSaveLoan.textContent = 'Remover empréstimo';
-                } else {
-                    requesterSelect.required = true;
-                    requesterSelect.disabled = false;
-                    cpfField.disabled = true;
-                    cpfField.value = '';
-                    dateLabel.style.display = "none";
-                    dateInput.required = false;
-                    
-                    btnSaveLoan.textContent = 'Salvar empréstimo';
-                }
+                    if (data.loan && data.loan.requester_id) {
+                        requesterSelect.value = data.loan.requester_id;
+                        cpfField.value = data.loan.requester_cpf;
+                        dateReturnLabel.style.display = "block";
 
-                requesterSelect.addEventListener('change', function() {
-                    const selectedId = this.value;
-                    cpfField.value = requesterData[selectedId] || '';
-                });
+                        dateLoanedLabel.style.display = "contents";
+                        dateLoanedInput.value = data.loan.loan_date;
+                        dateLoanedInput.disabled = true;
 
-                openLoanSidebar();
-            })
-            .catch(error => console.error('Erro ao buscar dados do empréstimo:', error));
+                        requesterSelect.disabled = true;
+                        cpfField.disabled = true;
+
+                        btnSaveLoan.textContent = 'Remover empréstimo';
+                    } else {
+                        requesterSelect.required = true;
+                        requesterSelect.disabled = false;
+                        cpfField.disabled = true;
+                        cpfField.value = '';
+                        dateReturnLabel.style.display = "none";
+                        
+                        dateLoanedLabel.style.display = "contents";
+                        dateLoanedInput.disabled = false;
+                        dateLoanedInput.setCustomValidity('');
+
+                        btnSaveLoan.textContent = 'Salvar empréstimo';
+                    }
+
+                    requesterSelect.addEventListener('change', function() {
+                        const selectedId = this.value;
+                        cpfField.value = requesterData[selectedId] || '';
+                    });
+
+                    openLoanSidebar();
+                })
+                .catch(error => console.error('Erro ao buscar dados do empréstimo:', error));
         });
 
         $('#tabela-equipamentos').on('click', 'a.text-danger', function (e) {
@@ -275,6 +291,24 @@
         document.querySelector("#hide-table").innerHTML = html;
 
         loadTableEvents();
+    }
+
+    function obterStatus(status) {
+        switch (status) {
+            case 0:
+                return "Inativo"
+            case 1:
+                return "Disponível"
+            case 2:
+                return "Emprestado"
+            case 3:
+                return "Em Conserto"
+            case 4:
+                return "Extraviado"
+            case 5:
+                return "Avariado"
+        }
+
     }
 </script>
 

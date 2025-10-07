@@ -16,7 +16,7 @@
             <h4 id="sidebar-title-edit" class="sidebar-title"></h4>
             <div id="options-holder" class="d-flex gap-3">
                 <a id="sidebar-btn-edit" onclick="makeFormEditable()" href="#">Editar usuário</a>
-                <a id="sidebar-btn-history" href="#">Visualizar histórico</a>
+                <!-- <a id="sidebar-btn-history" href="#">Visualizar histórico</a> -->
             </div>
         </div>
 
@@ -98,10 +98,6 @@
 
         const formData = new FormData(form);
         let userId = $("#id_edit").val();
-
-        if ($("#senha_edit").val() === ".......") {
-            formData.delete("password");
-        }
 
         const url = `/persons/update/${userId}/`;
         fetch(url, {

@@ -16,7 +16,7 @@
             <h4 id="sidebar-title-edit" class="sidebar-title"></h4>
             <div id="options-holder" class="d-flex gap-3">
                 <a id="sidebar-btn-edit" onclick="makeFormEditable()" href="#">Editar equipamento</a>
-                <a id="sidebar-btn-history" href="#">Visualizar histórico</a>
+                <!-- <a id="sidebar-btn-history" href="#">Visualizar histórico</a> -->
             </div>
         </div>
 
@@ -49,6 +49,7 @@
                     <label for="location_edit" class="form-label">Localização</label>
                     <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="location_edit" placeholder="Localização" name="location">
                 </div>
+
                 <div class="">
                     <label for="status_edit" class="form-label">Status</label>
                     <select onchange="removeRequiredStyle(this)" class="form-select" id="status_edit" disabled name="status">
@@ -59,8 +60,7 @@
                         <option value="4">Extraviado</option>
                         <option value="5">Avariado</option>
                     </select>
-                    <label id="status-message" class="float-start" style="font-size: 10px; color: #ff0000;"></label>
-
+                    <label id="status-message" class="float-start" style="font-size: 11px; color: #ff0000; display: none;">Campos desabilitados pois o equipamento se encontra emprestado!</label>
                 </div>
 
                 <div class="form-buttons d-flex justify-content-end">
@@ -72,6 +72,7 @@
         </div>
     </div>
 </div>
+
 <script src="{% static 'js/jquery-3.7.1.min.js' %}"></script>
 <script src="{% static 'js/toastr.min.js' %}"></script>
 <script>
@@ -88,6 +89,11 @@
         e.preventDefault();
         const form = e.target;
         handleFormOnSave();
+
+        if (validateFormEdit(form) > 0) {
+            handleFormOnResponse(0);
+            return;
+        }
 
         const formData = new FormData(form);
         let userId = $("#id_edit").val();
@@ -180,6 +186,7 @@
     }
 
     function makeFormEditable() {
+        let loaned = $("#status-message");
         savedValues.name = $("#name_edit").val();
         savedValues.type = $("#type_edit").val();
         savedValues.location = $("#location_edit").val();
@@ -190,11 +197,12 @@
         $("#btn-cancelar-edit").hide();
         
         let form = $('#form-equipamento-edit')
-        $("#name_edit").prop("disabled", false);
-        $("#type_edit").prop("disabled", false);
         $("#location_edit").prop("disabled", false);
-        $("#status_edit").prop("disabled", false);
-
+        if (loaned.css("display") != "contents") {
+            $("#status_edit").prop("disabled", false);
+            $("#name_edit").prop("disabled", false);
+            $("#type_edit").prop("disabled", false);
+        }
         $("#options-holder").css("visibility", "hidden");
     }
 
@@ -219,6 +227,23 @@
         $("#status_edit").val(savedValues.status);
 
         $("#options-holder").css("visibility", "visible");
+    }
+
+    function validateFormEdit(form) {
+
+        let invalid = 0;
+        const name_edit = form.name_edit.value.trim();
+        const location_edit = form.location_edit.value.trim();
+
+        if (!name_edit) {
+            form.name_edit.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!location_edit) {
+            form.location_edit.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        return invalid;
     }
 
 </script>
