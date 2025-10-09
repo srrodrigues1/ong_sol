@@ -118,16 +118,57 @@
             fetch(`/persons/${userId}`)
                 .then(response => response.json())
                 .then(data => {
-                    $('#sidebar-title-edit').text(data.username);
+                    console.log(data);
+                    $('#sidebar-title-edit').text(data.name);
                     document.getElementById('id_edit').value = data.id;
-                    document.getElementById('username_edit').value = data.username;
+                    document.getElementById('name_edit').value = data.name;
                     document.getElementById('cpf_edit').value = data.cpf;
                     document.getElementById('email_edit').value = data.email;
-                    document.getElementById('senha_edit').value = ".......";
-                    document.getElementById('status_edit').value = data.status;
-                    document.getElementById('funcao_edit').value = data.funcao;
+                    document.getElementById('phone_edit').value = data.phone;
+                    document.getElementById('ddd_edit').value = data.ddd;
+                    document.getElementById('state_edit').value = data.state;
+                    document.getElementById('city_edit').value = data.city;
+                    document.getElementById('district_edit').value = data.district;
+                    document.getElementById('street_edit').value = data.street;
+                    document.getElementById('st_number_edit').value = data.st_number;
+                    document.getElementById('cep_edit').value = data.cep;
+                    document.getElementById('birth_date_edit').value = data.birth_date;
 
-                    document.getElementById('sidebar-title').innerText = "Editar Usuário";
+                    const uploadedDiv = document.getElementById('uploaded-files');
+                    uploadedDiv.innerHTML = '';
+
+                    if (data.documents && data.documents.length > 0) {
+                        data.documents.forEach(doc => {
+                            console.log(doc);
+                            let fileEl;
+                            if (/\.(jpe?g|png|gif|webp)$/i.test(doc.url)) {
+                                fileEl = `
+                                    <div class="d-inline-block text-center me-2 mb-2">
+                                        <a href="${doc.url}" target="_blank">
+                                            <img src="${doc.url}" alt="${doc.name}"
+                                                style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                        </a>
+                                        <div class="small text-truncate" style="max-width: 80px;">${doc.name}</div>
+                                    </div>
+                                `;
+                            } else {
+                                fileEl = `
+                                    <div class="mb-1">
+                                        <a href="${doc.url}" target="_blank" class="text-decoration-none">
+                                            📎 ${doc.name}
+                                        </a>
+                                    </div>
+                                `;
+                            }
+                            uploadedDiv.innerHTML = '<div style="color:red;">TEST DOCUMENT DISPLAY 1</div>';
+                            // uploadedDiv.insertAdjacentHTML('beforeend', fileEl);
+                        });
+                    } else {
+                        uploadedDiv.innerHTML = '<small class="text-muted">Nenhum anexo disponível.</small>';
+                    }
+                    uploadedDiv.innerHTML = '<div style="color:red;">TEST DOCUMENT DISPLAY 2</div>';
+
+                    document.getElementById('sidebar-title').innerText = "Editar Pessoa";
                     openEditSidebar();
                 })
                 .catch(error => console.error('Erro ao buscar dados do usuário:', error));
@@ -173,7 +214,7 @@
                 toastr.success('Usuário removido com sucesso');
                 DELETE_MODAL.hide();
                 atualizarTabelapessoas();
-                deleteUserId = null; // limpa após excluir
+                deleteUserId = null;
             })
             .catch(() => toastr.error('Não foi possível excluir o usuário.'));
         });

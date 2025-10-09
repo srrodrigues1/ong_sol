@@ -1,6 +1,11 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+import os
+
+def user_directory_path(instance, filename):
+    return f'documents/{instance.person.id}/{filename}'
+
 class Person(models.Model):
     name = models.CharField(max_length=50)
     cpf = models.CharField(max_length=14, unique=True)
@@ -22,17 +27,17 @@ class Person(models.Model):
     create_date = models.DateTimeField(auto_now_add=True)
 
     history = HistoricalRecords()
-    
+
     def __str__(self):
         return self.name
-    
+
 class Documents(models.Model):
     person = models.ForeignKey(
-        Person, 
-        on_delete=models.CASCADE, 
+        Person,
+        on_delete=models.CASCADE,
         related_name="documents"
     )
-    image = models.ImageField(upload_to='documents/')
+    image = models.ImageField(upload_to=user_directory_path)
     create_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

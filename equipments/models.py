@@ -21,7 +21,7 @@ class Equipment(models.Model):
         (5, 'Avariado'),
     ]
     status = models.IntegerField(choices=STATUS_CHOICES, default=1)
-    location = models.CharField(max_length=50)
+    location = models.CharField(max_length=150)
     history = HistoricalRecords()
 
     def __str__(self):

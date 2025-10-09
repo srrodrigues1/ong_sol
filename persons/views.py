@@ -7,6 +7,24 @@ from .models import Person, Documents
 import re
 from datetime import datetime
 
+def format_cep(cep):
+    digits = re.sub(r'\D', '', cep)
+
+    if len(digits) == 8:
+        return f"{digits[:5]}-{digits[5:]}"
+    else:
+        return cep
+
+def format_phone(phone):
+    digits = re.sub(r'\D', '', phone)
+
+    if len(digits) == 9:
+        return f"{digits[0]} {digits[1:5]}-{digits[5:]}"
+    elif len(digits) == 8:  # caso não tenha o 9 inicial
+        return f"9 {digits[0:4]}-{digits[4:]}"
+    else:
+        return phone
+    
 def format_cpf(cpf: str) -> str:
     cpf = re.sub(r'\D', '', cpf)  # só números
     if len(cpf) == 11:
@@ -39,7 +57,8 @@ def criar_pessoa(request):
         formated_cpf = formated_cpf.replace('-', '')
 
         formated_phone = phone.replace('-', '')
-        formated_phone = formated_phone.strip("")
+        formated_phone = formated_phone.strip()
+        formated_phone = formated_phone.replace(" ", "")
 
         if Person.objects.filter(cpf=formated_cpf).exists():
             erros["cpf"] = f"O CPF <b>{cpf}</b> já está cadastrado."
@@ -84,3 +103,50 @@ def pessoas_parciais(request):
     return render(request, 'persons/tabela_pessoas.html', {
         'persons': persons
     })
+
+@login_required
+def dados_pessoa(request, person_id):
+    try:
+        person = Person.objects.prefetch_related("loans__requester").get(id=person_id)
+
+        loaned = False
+        loan = person.loans.filter(status=1, return_date__isnull=True).first()
+        if loan:
+            loaned = True
+
+        person.cpf = format_cpf(person.cpf)
+        person.phone = format_phone(person.phone)
+        person.cep = format_cep(person.cep)
+
+        documents = [
+            {
+                "id": doc.id,
+                "url": doc.image.url,
+                "name": doc.image.name.split('/')[-1],
+            }
+            for doc in Documents.objects.filter(person_id=person_id)
+        ]
+
+        data = {
+            'id': person.id,
+            'name': person.name,
+            'cpf': person.cpf,
+            'phone': person.phone,
+            'email': person.email,
+            'ddd': person.ddd,
+            'state': person.state,
+            'city': person.city,
+            'district': person.district,
+            'street': person.street,
+            'st_number': person.st_number,
+            'cep': person.cep,
+            'status': person.status,
+            'birth_date': person.birth_date.strftime("%d/%m/%Y"),
+            'create_date': person.create_date,
+            'loaned': loaned,
+            'documents': documents,
+        }
+        return JsonResponse(data)
+
+    except Person.DoesNotExist:
+        return JsonResponse({'error': 'Pessoa não encontrada'}, status=404)
