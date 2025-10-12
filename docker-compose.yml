@@ -10,19 +10,19 @@ services:
       MYSQL_USER: myuser
       MYSQL_PASSWORD: myuser
     ports:
-      - "127.0.0.1:3306:3306"
+      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
 
   web:
     build: .
-    command: ./wait-for-it.sh db:3306 -- python manage.py runserver 0.0.0.0:8000
+    command: ./wait-for-it.sh db:3306 -- python manage.py runserver 0.0.0.0:8080
     volumes:
       - .:/app
       - ./wait-for-it.sh:/wait-for-it.sh
     working_dir: /app
     ports:
-      - "127.0.0.1:8000:8000"
+      - "8080:8080"
     depends_on:
       - db
 

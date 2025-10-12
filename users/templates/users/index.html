@@ -162,16 +162,19 @@
                     'X-CSRFToken': '{{ csrf_token }}'
                 }
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Erro na exclusão');
-
-
-                toastr.success('Usuário removido com sucesso');
-                DELETE_MODAL.hide();
-                atualizarTabelaUsuarios();
-                deleteUserId = null; // limpa após excluir
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Usuário removido com sucesso');
+                    DELETE_MODAL.hide();
+                    atualizarTabelaUsuarios();
+                    deleteUserId = null;
+                } else {
+                    toastr.error(data.error)
+                    DELETE_MODAL.hide();
+                    deleteUserId = null;
+                }
             })
-            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
         });
 
         $('#exportar-dados').on('click', function() {

@@ -267,3 +267,58 @@ table.table-sm thead tr th {
     color: #a900c1;
     text-align: center;
 }
+.loan-active,
+.loan-inactive,
+.loan-loaned {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 10px;
+    overflow: hidden; /* garante que o background arredonde também */
+}
+
+/* fundo centralizado de 50% */
+.loan-active::before,
+.loan-inactive::before,
+.loan-loaned::before {
+    content: "";
+    position: absolute;
+    left: 25%; /* centraliza o bloco de 50% */
+    width: 50%;
+    height: 100%;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    z-index: 0;
+}
+
+/* texto acima do fundo */
+.loan-active span,
+.loan-inactive span,
+.loan-loaned span {
+    position: relative;
+    z-index: 1;
+}
+
+/* cores específicas */
+.loan-active::before {
+    background-color: #00FF371C;
+}
+.loan-active {
+    color: #009E22;
+}
+
+.loan-inactive::before {
+    background-color: #ef080834;
+}
+.loan-inactive {
+    color: #D80000;
+}
+
+.loan-loaned::before {
+    background-color: #B5CC0033;
+}
+.loan-loaned {
+    color: #899B00;
+}
+

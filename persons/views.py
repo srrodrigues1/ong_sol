@@ -1,10 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db.models import ProtectedError
 from django.urls import reverse
 from functools import wraps
 from django.http import JsonResponse
 from .models import Person, Documents
 
 import re
+import json
+import os
 from datetime import datetime
 
 def format_cep(cep):
@@ -118,14 +121,15 @@ def dados_pessoa(request, person_id):
         person.phone = format_phone(person.phone)
         person.cep = format_cep(person.cep)
 
+        queryset = Documents.objects.filter(person_id=person_id)
         documents = [
             {
                 "id": doc.id,
                 "url": doc.image.url,
                 "name": doc.image.name.split('/')[-1],
             }
-            for doc in Documents.objects.filter(person_id=person_id)
-        ]
+            for doc in queryset
+        ] if queryset.exists() else None
 
         data = {
             'id': person.id,
@@ -150,3 +154,94 @@ def dados_pessoa(request, person_id):
 
     except Person.DoesNotExist:
         return JsonResponse({'error': 'Pessoa não encontrada'}, status=404)
+
+@login_required   
+def atualizar_pessoa(request, person_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método inválido'}, status=405)
+
+    person = get_object_or_404(Person, id=person_id)
+
+    def get_field(name):
+        value = request.POST.get(name)
+        if value is None or value.strip() == "" or value.strip().lower() == "null":
+            return None
+        return value.strip()
+
+    name = get_field("name_edit")
+    cpf = get_field("cpf_edit")
+    email = get_field("email_edit")
+    phone = get_field("phone_edit")
+    ddd = get_field("ddd")
+    state = get_field("state")
+    city = get_field("city")
+    district = get_field("district")
+    street = get_field("street")
+    st_number = get_field("st_number")
+    cep = get_field("cep")
+    birth_date_str = get_field("birth_date")
+
+    if name:
+        person.name = name
+    if cpf:
+        person.cpf = cpf.replace('.', '').replace('-', '')
+    if email:
+        person.email = email
+    if phone:
+        person.phone = phone.replace('-', '').replace(' ', '')
+    if ddd:
+        person.ddd = ddd
+    if state:
+        person.state = state
+    if city:
+        person.city = city
+    if district:
+        person.district = district
+    if street:
+        person.street = street
+    if st_number:
+        person.st_number = st_number
+    if cep:
+        person.cep = cep
+
+    if birth_date_str:
+        try:
+            person.birth_date = datetime.strptime(birth_date_str, '%d/%m/%Y')
+        except ValueError:
+            pass
+
+    person.save()
+
+    removed_docs = request.POST.get("removed_documents")
+    if removed_docs:
+        try:
+            removed_ids = json.loads(removed_docs)
+            for doc_id in removed_ids:
+                doc = Documents.objects.filter(id=doc_id, person=person).first()
+                if doc:
+                    if doc.image and os.path.isfile(doc.image.path):
+                        os.remove(doc.image.path)
+                    doc.delete()
+        except json.JSONDecodeError:
+            pass
+
+    for f in request.FILES.getlist("documents[]"):
+        Documents.objects.create(person=person, image=f)
+
+    return JsonResponse({'success': f"{person.name} atualizado com sucesso!"})
+
+def excluir_pessoa(request, person_id):
+    person = get_object_or_404(Person, id=person_id)
+
+    try:
+        nome = person.name
+        person.delete()
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
+
+        return JsonResponse({'success': f"Equipamento {nome} excluído com sucesso!"})
+
+    except ProtectedError:
+        msg = 'Não foi possível excluir este equipamento: existem registros vinculados a ele.'
+        return JsonResponse({'error': msg})

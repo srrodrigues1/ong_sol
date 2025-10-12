@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.css">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.0/dist/extensions/filter-control/bootstrap-table-filter-control.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
 </head>
 <body class="body-persons">
@@ -118,7 +119,7 @@
             fetch(`/persons/${userId}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data);
+
                     $('#sidebar-title-edit').text(data.name);
                     document.getElementById('id_edit').value = data.id;
                     document.getElementById('name_edit').value = data.name;
@@ -134,39 +135,52 @@
                     document.getElementById('cep_edit').value = data.cep;
                     document.getElementById('birth_date_edit').value = data.birth_date;
 
-                    const uploadedDiv = document.getElementById('uploaded-files');
-                    uploadedDiv.innerHTML = '';
+                    const $uploadedDiv = $('#uploaded-files');
+                    $uploadedDiv.empty();
 
                     if (data.documents && data.documents.length > 0) {
                         data.documents.forEach(doc => {
-                            console.log(doc);
                             let fileEl;
-                            if (/\.(jpe?g|png|gif|webp)$/i.test(doc.url)) {
-                                fileEl = `
-                                    <div class="d-inline-block text-center me-2 mb-2">
-                                        <a href="${doc.url}" target="_blank">
-                                            <img src="${doc.url}" alt="${doc.name}"
-                                                style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                        </a>
-                                        <div class="small text-truncate" style="max-width: 80px;">${doc.name}</div>
-                                    </div>
-                                `;
-                            } else {
-                                fileEl = `
-                                    <div class="mb-1">
-                                        <a href="${doc.url}" target="_blank" class="text-decoration-none">
-                                            📎 ${doc.name}
-                                        </a>
-                                    </div>
-                                `;
-                            }
-                            uploadedDiv.innerHTML = '<div style="color:red;">TEST DOCUMENT DISPLAY 1</div>';
-                            // uploadedDiv.insertAdjacentHTML('beforeend', fileEl);
+
+                        if (/\.(jpe?g|png|gif|webp)$/i.test(doc.url)) {
+                            fileEl = `
+                                <div class="file-item" data-id="${doc.id}">
+                                    <button type="button" class="remove-file-btn" style="display: none;" title="Remover">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    <a href="${doc.url}" target="_blank">
+                                        <img src="${doc.url}" alt="${doc.name}">
+                                    </a>
+                                    <div class="small text-truncate">${doc.name}</div>
+                                </div>
+                            `;
+                        } else {
+                            let iconClass = "bi bi-file-earmark-text";
+
+                            if (/\.pdf$/i.test(doc.url)) iconClass = "bi bi-file-earmark-pdf text-danger";
+                            else if (/\.docx?$/i.test(doc.url)) iconClass = "bi bi-file-earmark-word text-primary";
+                            else if (/\.txt$/i.test(doc.url)) iconClass = "bi bi-file-earmark-text text-secondary";
+
+                            fileEl = `
+                                <div class="file-item" data-id="${doc.id}">
+                                    <button type="button" class="remove-file-btn" style="display: none;" title="Remover">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                    <a href="${doc.url}" target="_blank" class="file-icon-link d-flex flex-column align-items-center justify-content-center">
+                                        <div class="file-icon-wrapper d-flex align-items-center justify-content-center">
+                                            <i class="${iconClass}" style="font-size: 36px;"></i>
+                                        </div>
+                                        <div class="small text-truncate">${doc.name}</div>
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        
+                        $uploadedDiv.append(fileEl);
                         });
                     } else {
-                        uploadedDiv.innerHTML = '<small class="text-muted">Nenhum anexo disponível.</small>';
+                        $uploadedDiv.append('<small class="text-muted">Nenhum anexo disponível.</small>');
                     }
-                    uploadedDiv.innerHTML = '<div style="color:red;">TEST DOCUMENT DISPLAY 2</div>';
 
                     document.getElementById('sidebar-title').innerText = "Editar Pessoa";
                     openEditSidebar();
@@ -207,16 +221,19 @@
                     'X-CSRFToken': '{{ csrf_token }}'
                 }
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Erro na exclusão');
-
-
-                toastr.success('Usuário removido com sucesso');
-                DELETE_MODAL.hide();
-                atualizarTabelapessoas();
-                deleteUserId = null;
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    toastr.success('Pessoa removida com sucesso');
+                    DELETE_MODAL.hide();
+                    atualizarTabelaPessoas();
+                    deleteUserId = null;
+                } else {
+                    toastr.error(data.error)
+                    DELETE_MODAL.hide();
+                    deleteUserId = null;
+                }
             })
-            .catch(() => toastr.error('Não foi possível excluir o usuário.'));
         });
 
         $('#exportar-dados').on('click', function() {

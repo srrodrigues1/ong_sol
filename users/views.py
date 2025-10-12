@@ -152,8 +152,8 @@ def atualizar_usuario(request, user_id):
 @require_POST
 def excluir_usuario(request, user_id):
     usuario = get_object_or_404(User, id=user_id)
-
-    if usuario == request.user:
+    
+    if usuario.id == request.session.get('user_id'):
         return JsonResponse({'error': 'Você não pode excluir a si mesmo.'}, status=400)
 
     try:

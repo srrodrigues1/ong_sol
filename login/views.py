@@ -49,3 +49,7 @@ def obter_usuario(request):
             pass
     
     return JsonResponse({"success": False, "message": "Usuário não está autenticado"})
+
+def check_session(request):
+    logged_in = bool(request.session.get('user_id'))
+    return JsonResponse({'logged_in': logged_in})

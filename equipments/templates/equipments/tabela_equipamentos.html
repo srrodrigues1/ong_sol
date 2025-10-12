@@ -18,6 +18,7 @@
             <th data-field="type" class="td-truncate" data-width="40" data-sortable="true">Tipo</th>
             <th data-field="location" class="td-truncate" data-width="50" data-sortable="true">Localização</th>
             <th data-field="requester" class="td-truncate" data-width="50" data-sortable="true">Solicitante</th>
+            <th data-field="days_loaned" class="td-truncate" data-width="30" data-sortable="true">Dias emprestado</th>
             <th data-field="status" class="td-truncate" data-width="30" data-sortable="true">Status</th>
             <th data-field="create_date" class="td-truncate" data-width="30" data-sortable="true">Dt. Criação</th>
             <th data-field="acoes" style="text-align: center" class="td-truncate" data-width="27">Ações</th>
@@ -39,6 +40,37 @@
             </td>
             <td class="equipment-row td-truncate" title="{{ equipment.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.location }}</td>
             <td class="equipment-row td-truncate" title="{{ equipment.requester }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.requester }}</td>
+            {% if equipment.days_loaned is not None %}
+                {% if equipment.days_loaned <= 30 %}
+                    <td class="equipment-row td-truncate"
+                        title="{{ equipment.days_loaned }} dias"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <div class="loan-active"><span>{{ equipment.days_loaned }}</span></div>
+                    </td>
+                {% elif equipment.days_loaned <= 60 %}
+                    <td class="equipment-row td-truncate"
+                        title="{{ equipment.days_loaned }} dias"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <div class="loan-loaned"><span>{{ equipment.days_loaned }}</span></div>
+                    </td>
+                {% else %}
+                    <td class="equipment-row td-truncate"
+                        title="{{ equipment.days_loaned }} dias"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top">
+                        <div class="loan-inactive"><span>{{ equipment.days_loaned }}</span></div>
+                    </td>
+                {% endif %}
+            {% else %}
+                <td class="equipment-row td-truncate text-muted text-center"
+                    title="Sem data de empréstimo"
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top">
+                    -
+                </td>
+            {% endif %}
             <td>
                 {% if equipment.status == 0 %}
                     <div class="equipment-inactive">Inativo</div>

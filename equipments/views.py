@@ -8,9 +8,8 @@ from django.db import transaction
 from django.utils import timezone
 
 import csv
-import json
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 def is_valid_date(date_str):
     try:
@@ -62,10 +61,15 @@ def criar_equipamento(request):
 def equipamentos_parciais(request):
     equipments = Equipment.objects.prefetch_related("loans__requester").order_by("id")
 
+    days_loaned = None
     equipamentos_com_requester = []
     for eq in equipments:
         loan = eq.loans.filter(status=1, return_date__isnull=True).first()
         requester_name = loan.requester.name if loan else ""
+        if loan and loan.loan_date:
+            days_loaned = (date.today() - loan.loan_date.date()).days
+        else:
+            days_loaned = None
         
         equipamentos_com_requester.append({
             "id": eq.id,
@@ -73,6 +77,7 @@ def equipamentos_parciais(request):
             "requester": requester_name,
             "location": eq.location,
             "status": eq.status,
+            'days_loaned': days_loaned,
             "create_date": eq.create_date
         })
 
@@ -112,8 +117,6 @@ def atualizar_equipamento(request, equipment_id):
         type = request.POST.get('type')
         location = request.POST.get('location')
         status = request.POST.get('status')
-
-        erros = {}
 
         equipment = get_object_or_404(Equipment, id=equipment_id)
 

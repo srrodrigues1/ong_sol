@@ -67,5 +67,18 @@
             .catch(error => console.error('Erro ao buscar dados do usuário:', error));
     }
 
+    function checkSession() {
+        fetch('/check-session/')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.logged_in) {
+                    window.location.href = '/login/';
+                }
+            })
+            .catch(err => console.error('Erro ao verificar sessão:', err));
+    }
+
+    setInterval(checkSession, 120000);
+
 </script>
 </html>

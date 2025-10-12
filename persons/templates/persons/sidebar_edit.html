@@ -91,16 +91,14 @@
                     </div>
                 </div>
 
-                <div class="mb-2">
+                <div class="mb-2" id="div-documents" style="display: none;">
                     <label for="documents" class="form-label">Anexos</label>
-                    <input type="file" class="form-control" id="documents" name="documents[]" multiple accept="image/*,.pdf,.doc,.docx">
+                    <input type="file" class="form-control" disabled id="documents" name="documents[]" multiple accept="image/*,.pdf,.doc,.docx">
+                </div>
 
-                    <!-- Lista de arquivos já carregados do banco -->
-                    <div id="uploaded-files" class="mt-2">
-
-                    </div>
-
-                    <!-- Pré-visualização dos novos uploads -->
+                <div class="mb-2">
+                    <label>Anexos Salvos</label>
+                    <div id="uploaded-files" class="mt-2"></div>
                     <div id="preview-files" class="mt-2"></div>
                 </div>
 
@@ -136,9 +134,19 @@
         }
 
         const formData = new FormData(form);
-        let userId = $("#id_edit").val();
+        let personId = $("#id_edit").val();
 
-        const url = `/persons/update/${userId}/`;
+        const fileInput = document.getElementById('documents');
+        for (const file of fileInput.files) {
+            formData.append('documents[]', file);
+        }
+
+        const removedIds = Array.from(document.querySelectorAll('.file-item.removed'))
+            .map(el => el.dataset.id);
+        
+        formData.append('removed_documents', JSON.stringify(removedIds));
+        
+        const url = `/persons/update/${personId}/`;
         fetch(url, {
             method: 'POST',
             headers: {
@@ -151,9 +159,6 @@
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
                 return response.json();
-            } else {
-                window.location.href = '/persons';
-                return;
             }
         }).then(data => {
             if (!data) return;
@@ -187,7 +192,7 @@
     }
 
     function resetFormEdit(form) {
-        form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
+        form.find("input[type=text], input[type=password], input[type=email], textarea, input[type=file]").val("");
         form.find("select").prop("selectedIndex", 0);
         $("#username_edit").css("border-color", "#ced4da");
         $("#cpf_edit").css("border-color", "#ced4da");
@@ -197,40 +202,70 @@
     }    
 
     function validateFormEdit(form) {
+        console.log(form);
+        var errors = 0;
+        const name = form.name_edit.value.trim();
+        const cpf = form.cpf_edit.value.trim();
+        const email = form.email_edit.value.trim();
+        const ddd = form.ddd_edit.value.trim();
+        const phone = form.phone_edit.value;
+        const birth_date = form.birth_date_edit.value;
+        const cep = form.cep_edit.value;
+        const state = form.state_edit.value;
+        const city = form.city_edit.value;
+        const district = form.district_edit.value;
+        const street = form.street_edit.value;
+        const st_number = form.street_edit.value;
 
-        let invalid = 0;
-        const username = form.username.value.trim();
-        const cpf = form.cpf.value.trim();
-        const email = form.email.value.trim();
-        const senha = form.password.value.trim();
-        const status = form.status.value;
-        const funcao = form.funcao.value;
-
-        if (!username) {
-            form.username.style = 'border-color: #eb0000';
-            invalid += 1;
+        if (!name) {
+            form.name_edit.style = 'border-color: #eb0000';
+            errors++;
         }
         if (!cpf) {
-            form.cpf.style = 'border-color: #eb0000';
-            invalid += 1;
+            form.cpf_edit.style = 'border-color: #eb0000';
+            errors++;
         }
         if (!email) {
-            form.email.style = 'border-color: #eb0000';
-            invalid += 1;
+            form.email_edit.style = 'border-color: #eb0000';
+            errors++;
         }
-        if (!senha) {
-            form.senha.style = 'border-color: #eb0000';
-            invalid += 1;
+        if (!ddd) {
+            form.ddd_edit.style = 'border-color: #eb0000';
+            errors++;
         }
-        if (!status) {
-            form.status.style = 'border-color: #eb0000';
-            invalid += 1;
+        if (!phone) {
+            form.phone_edit.style = 'border-color: #eb0000';
+            errors++;
         }
-        if (!funcao) {
-            form.funcao.style = 'border-color: #eb0000';
-            invalid += 1;
+        if (!cep) {
+            form.cep_edit.style = 'border-color: #eb0000';
+            errors++;
         }
-        return invalid;
+        if (!state) {
+            form.state_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        if (!city) {
+            form.city_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        if (!district) {
+            form.district_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        if (!birth_date) {
+            form.birth_date_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        if (!street) {
+            form.street_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        if (!st_number) {
+            form.st_number_edit.style = 'border-color: #eb0000';
+            errors++;
+        }
+        return errors;
     }
 
     function openEditSidebar() {
@@ -299,14 +334,17 @@
         savedValues.district = $("#district_edit").val();
         savedValues.street = $("#street_edit").val();
         savedValues.st_number = $("#st_number_edit").val();
+        savedValues.uploadedFilesHTML = $("#uploaded-files").html();
         
         $("#password-strenght").show();
         $("#btn-cancelar-edit-save").show();
         $("#btn-cancelar-edit-cancel").show();
         $("#btn-cancelar-edit").hide();
-        
+        $("#div-documents").show();
+        $(".remove-file-btn").show();
+
         let form = $('#form-pessoa-edit')
-        form.find("input[type=text], input[type=password], input[type=email], textarea").prop("disabled", false);
+        form.find("input[type=text], input[type=password], input[type=email], textarea, input[type=file]").prop("disabled", false);
         form.find("select").prop("disabled", false);
         $("#name_edit").prop("disabled", false);
         $("#birth_date_edit").prop("disabled", false);
@@ -325,13 +363,15 @@
     }
 
     function makeFormNonEditable() {
+        $(".remove-file-btn").hide();
+        $("#div-documents").hide()
         $("#password-strenght").hide();
         $("#btn-cancelar-edit-save").hide();
         $("#btn-cancelar-edit-cancel").hide();
         $("#btn-cancelar-edit").show();
 
         let form = $('#form-pessoa-edit')
-        form.find("input[type=text], input[type=password], input[type=email], textarea").prop("disabled", true);
+        form.find("input[type=text], input[type=password], input[type=email], textarea, input[type=file]").prop("disabled", true);
         form.find("select").prop("disabled", true);
         $("#name_edit").prop("disabled", true);
         $("#birth_date_edit").prop("disabled", true);
@@ -358,9 +398,15 @@
         $("#district_edit").val(savedValues.district)
         $("#street_edit").val(savedValues.street)
         $("#st_number_edit").val(savedValues.st_number)
+        $("#uploaded-files").html(savedValues.uploadedFilesHTML);
 
         $("#options-holder").css("visibility", "visible");
     }
+
+    $('#uploaded-files').on('click', '.remove-file-btn', function () {
+        const fileItem = $(this).closest('.file-item');
+        fileItem.addClass('removed').hide();
+    });
 
 </script>
 </body>

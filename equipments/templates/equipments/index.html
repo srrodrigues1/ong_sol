@@ -139,7 +139,7 @@
             fetch(`/equipments/loan/${equipmentId}`)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(data.equipment.status);
+
                     if (data.equipment.status != 2 && data.equipment.status != 1) {
                         toastr.warning("O equipamento não pode ser emprestado devido estar com o status <b>" + obterStatus(data.equipment.status) + "<b>")
                         return;
@@ -216,7 +216,7 @@
             e.preventDefault();
 
             const $row     = $(this).closest('tr');
-            deleteUserId   = $row.data('id');  // uses global
+            deleteUserId   = $row.data('id');
             const username = $row.children('td').eq(0).text();
 
             $('#delete-username').text(username);
@@ -246,7 +246,6 @@
             })
             .then(response => response.json())
             .then(data => {
-                console.log(data.error)
                 if (data.success) {
                     toastr.success('Equipamento removido com sucesso');
                     DELETE_MODAL.hide();
@@ -254,6 +253,8 @@
                     deleteUserId = null;
                 } else {
                     toastr.error(data.error)
+                    DELETE_MODAL.hide();
+                    deleteUserId = null;
                 }
             })
         });
