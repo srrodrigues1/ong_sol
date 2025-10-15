@@ -20,6 +20,8 @@ services:
     restart: always
     depends_on:
       - db
+    env_file:
+      - .env
     environment:
       DJANGO_DEBUG: 'False'
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
@@ -28,7 +30,6 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
-    command: ./wait-for-it.sh db:3306 -- python manage.py migrate
     volumes:
       - .:/app
       - static_volume:/static
@@ -42,14 +43,24 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/static
       - ./media:/protected_media
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
     depends_on:
       - web
     networks:
       - backend
+
+  certbot:
+    image: certbot/cerbot
+    container_name: certbot
+    volumes:
+      - ./certbot/www:var/www/cerbot
+      - ./certbot/conf:/etc/letsencrypt
 
 volumes:
   db_data:

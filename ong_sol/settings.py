@@ -27,12 +27,7 @@ MEDIA_ROOT = '/protected_media/'
 DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-secret")
 
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "192.168.100.226",
-    "192.168.100.232",
-]
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
 
 # Application definition
 
