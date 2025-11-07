@@ -1,0 +1,324 @@
+/* Customizações do layout */
+body.body-waitlist {
+    background-color: #f5f5f5;
+}
+
+.container {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+/* Texto label da página */
+.text.page-label {
+    color: #01AC4D;
+}
+
+/* Botão adicionar */
+.btn.btn-add {
+    font-weight: bold;
+    color: #ffffff;
+    background-color: #01AC4D;
+}
+
+/* Texto botão adicionar */
+.btn-add i {
+    color: #ffffff;
+    margin-right: 5px;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 0.4em 0.7em;
+    border-radius: 8px;
+}
+
+.badge.bg-ativo {
+    background-color: #00ff3705;
+    color: #009E22;
+}
+
+.badge.bg-inativo {
+    background-color: #EF080804;
+    color: #D80000;
+}
+
+.badge.bg-primary {
+    background-color: #007bff !important;
+}
+
+.badge.bg-secondary {
+    background-color: #6c757d !important;
+}
+
+/* Botões de ação */
+.table a {
+    /* font-size: 1.2rem; */
+    transition: all 0.3s ease;
+}
+
+.btn.btn-add:hover {
+    font-weight: bold;
+    color: #01AC4D;
+    background-color: #ffffff;
+    border-color: #01AC4D;
+}
+
+.btn.btn-add:hover i {
+    color: #01AC4D;
+    margin-right: 5px;
+}
+
+.table a:hover {
+    opacity: 0.7;
+}
+
+/* Pesquisa e filtro */
+input[type="text"], select {
+    border-radius: 8px;
+}
+
+/* Estilo base da paginação */
+.pagination .page-link {
+    border-radius: 10px !important;
+    margin: 0px 2px;
+    color: black;
+    font-weight: bold;
+    border-color: #C3C3C3;
+}
+
+/* Página ativa */
+.pagination .page-item.active .page-link {
+    color: white !important;
+    background-color: #01AC4D !important;
+    border-color: #C3C3C3 !important;
+}
+
+.pagination .page-link:hover {
+    background-color: #f2f2f2;
+    color: #01AC4D;
+}
+
+.pagination .page-item.active .page-link {
+    color: white !important;
+    background-color: #01AC4D !important;
+    border-color: #C3C3C3 !important;
+}
+
+/* Ícones (próximo/anterior) */
+.pagination .page-item .page-link {
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+/* Desativados (página anterior ou próxima quando indisponível) */
+.pagination .page-item.disabled .page-link {
+    color: #aaa;
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+.alert-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1055;
+}
+
+.alert.alert-success {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    animation: fadeOut 4s forwards;
+}
+
+.alert.alert-error {
+    padding: 10px 20px;
+    background-color: #be1111;
+    color: white;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    animation: fadeOut 4s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+table.table-sm tbody tr td,
+table.table-sm thead tr th {
+    padding: 2px 8px !important;
+    font-size: 14px;
+}
+
+#tabela-waitlist {
+    table-layout: fixed;
+    flex-grow: 1;
+    width: 100%;
+    border-radius: 3px;
+    border-collapse: separate;
+    border-spacing: 0;
+    height: 310px;
+    border: 1px solid #dee2e6; /* Borda externa da tabela */
+}
+
+.bootstrap-table .fixed-table-container .table thead th {
+    vertical-align: top !important;
+}
+
+/* Tabela fixa sem esticar linhas */
+#tabela-waitlist .fixed-table-body {
+    /* max-height: 250px; */
+    max-height: 100%;
+    height: 80%;
+    overflow-y: auto;
+}
+#tabela-waitlist tbody {
+    display: block;
+    height: 100%;
+    overflow-y: auto;
+    border-top: none; /* Evitar borda dupla com o thead */
+    border-left: 1px solid #dee2e6;
+    border-right: 1px solid #dee2e6;
+    border-bottom: 1px solid #dee2e6;
+}
+
+#tabela-waitlist thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+#tabela-waitlist thead, 
+#tabela-waitlist tbody, 
+#tabela-waitlist tr, 
+#tabela-waitlist th, 
+#tabela-waitlist td {
+    border: none !important;
+}
+
+#tabela-waitlist tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.td-truncate {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+.equipment-active {
+    background-color: #00FF371C;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #009E22;
+    text-align: center;
+}
+.equipment-inactive {
+    background-color: #ef080834;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #D80000;
+    text-align: center;
+}
+.equipment-loaned {
+    background-color: #B5CC0033;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #899B00;
+    text-align: center;
+}
+.equipment-repair {
+    background-color: #007bff13;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #007BFF;
+    text-align: center;
+}
+.equipment-lost {
+    background-color: #8b9db113;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: black;
+    text-align: center;
+}
+.equipment-broken {
+    background-color: #ab00c10c;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #a900c1;
+    text-align: center;
+}
+.loan-active,
+.loan-inactive,
+.loan-loaned {
+    position: relative;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    border-radius: 10px;
+    overflow: hidden; /* garante que o background arredonde também */
+}
+
+/* fundo centralizado de 50% */
+.loan-active::before,
+.loan-inactive::before,
+.loan-loaned::before {
+    content: "";
+    position: absolute;
+    left: 25%; /* centraliza o bloco de 50% */
+    width: 50%;
+    height: 100%;
+    border: 1px solid #eeeeeeab;
+    border-radius: 10px;
+    z-index: 0;
+}
+
+/* texto acima do fundo */
+.loan-active span,
+.loan-inactive span,
+.loan-loaned span {
+    position: relative;
+    z-index: 1;
+}
+
+/* cores específicas */
+.loan-active::before {
+    background-color: #00FF371C;
+}
+.loan-active {
+    color: #009E22;
+}
+
+.loan-inactive::before {
+    background-color: #ef080834;
+}
+.loan-inactive {
+    color: #D80000;
+}
+
+.loan-loaned::before {
+    background-color: #B5CC0033;
+}
+.loan-loaned {
+    color: #899B00;
+}
+

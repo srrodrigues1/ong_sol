@@ -30,6 +30,11 @@
             <a href="/persons/" class="{% if '/persons' in request.path %}active{% endif %}">
                 <i class="fas fa-users"></i> Pessoas
             </a>
+
+            <a href="/waitlist/" class="{% if '/waitlist' in request.path %}active{% endif %}">
+                <i class="fa fa-address-book"></i> Lista de Espera
+                <!-- <i class="fa fa-clock-o"></i> Pessoas -->
+            </a>
         </div>
 
         <div id="button-deslogar" class="user-footer">
@@ -68,7 +73,7 @@
     }
 
     function checkSession() {
-        fetch('/check-session/')
+        fetch('/login/check_session')
             .then(response => response.json())
             .then(data => {
                 if (!data.logged_in) {
@@ -78,7 +83,7 @@
             .catch(err => console.error('Erro ao verificar sessão:', err));
     }
 
-    setInterval(checkSession, 120000);
+    setInterval(checkSession, 15000);
 
 </script>
 </html>

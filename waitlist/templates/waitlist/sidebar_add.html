@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="{% static 'equipments/css/sidebar_add.css' %}">
+    <link rel="stylesheet" href="{% static 'waitlist/css/sidebar_add.css' %}">
 </head>
 </html>
 
@@ -13,7 +13,7 @@
 
     <div class="sidebar-content">
         <div class="sidebar-header d-flex justify-content-between align-items-center">
-            <h2 id="sidebar-title" class="sidebar-title">Criar Equipamento</h2>
+            <h2 id="sidebar-title" class="sidebar-title">Criar Espera</h2>
             <button class="btn-close" onclick="closeAddSidebar()"></button>
         </div>
 
@@ -24,31 +24,21 @@
         <div id="mensagem-usuario"></div>
         
         <div class="sidebar-body">
-            <form id="form-equipamento" class="form-equipamento" method="post" action="{% url 'criar_equipamento' %}">
+            <form id="form-waitlist" class="form-waitlist" method="post" action="{% url 'criar_waitlist' %}">
                 {% csrf_token %}
                 <div class="mb-2">
-                    <label for="name" class="form-label">Nome</label>
-                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" required id="name" placeholder="Nome" name="name">
-                </div>
-                <div class="mb-2">
-                    <label for="type" class="form-label">Tipo</label>
-                    <select onchange="removeRequiredStyle(this)" class="form-select" required id="type" name="type">
-                        <option value="">Selecione um tipo...</option>
+                    <label for="person" class="form-label">Nome</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" id="person" name="person">
                     </select>
                 </div>
                 <div class="mb-2">
-                    <label for="location" class="form-label">Localização</label>
-                    <input type="location" onkeydown="removeRequiredStyle(this)" class="form-control" required id="location" placeholder="Localização" name="location">
-                </div>
-                <div class="">
-                    <label for="status" class="form-label">Status</label>
-                    <select onchange="removeRequiredStyle(this)"  class="form-select" required id="status" name="status">
-                        <option value="1" selected>Ativo</option>
-                        <option value="0">Inativo</option>
-                        <option value="3">Em conserto</option>
-                        <option value="4">Extraviado</option>
-                        <option value="5">Avariado</option>
+                    <label for="equipment" class="form-label">Item desejado</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" id="equipment" name="equipment">
                     </select>
+                </div>
+                <div class="mb-2" id="dt_contact_div">
+                    <label for="dt_contact" class="form-label">Data que entrou em contato</label>
+                    <input type="text" onkeyup="removeRequiredStyle(this)" class="form-control" id="dt_contact" placeholder="dd/mm/aaaa" name="dt_contact" maxlength="10">
                 </div>
 
                 <div class="form-buttons d-flex justify-content-end mt-4">
@@ -62,7 +52,22 @@
 
 <script>
 
-    document.getElementById('form-equipamento').addEventListener('submit', function(e) {
+    document.getElementById('dt_contact').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 8) value = value.slice(0, 8);
+
+        let formatted = '';
+        if (value.length > 4) {
+            formatted = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (value.length > 2) {
+            formatted = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        } else {
+            formatted = value;
+        }
+        e.target.value = formatted;
+    });
+
+    document.getElementById('form-waitlist').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = e.target;
 
@@ -79,7 +84,7 @@
 
         const formData = new FormData(form);
         
-        fetch('/equipments/novo', {
+        fetch('/waitlist/novo', {
             method: 'POST',
             body: formData
         })
@@ -96,10 +101,10 @@
             const mensagemDiv = document.getElementById('mensagem-usuario');
             mensagemDiv.innerHTML = '';
 
-            if (data.status == "success") {
+            if (data.success) {
                 form.reset();
-                toastr.success(data.message);
-                atualizarTabelaEquipamentos();
+                toastr.success(data.success);
+                atualizarTabelaWaitlist();
                 closeAddSidebar();
             } else if (data.error) {
                 let listaErros = '';
@@ -127,35 +132,28 @@
     function resetForm(form) {
         form.find("input[type=text], input[type=password], input[type=email], textarea").val("");
         form.find("select").prop("selectedIndex", 0);
-        $("#username").css("border-color", "#ced4da");
-        $("#cpf").css("border-color", "#ced4da");
-        $("#email").css("border-color", "#ced4da");
-        $("#senha").css("border-color", "#ced4da");
-        $("#funcao").css("border-color", "#ced4da");
+        $("#person").css("border-color", "#ced4da");
+        $("#equipment").css("border-color", "#ced4da");
+        $("#dt_contact").css("border-color", "#ced4da");
     }
 
     function validateFormAdd(form) {
 
-        let erros = 0;
-        const name = form.name.value.trim();
-        const type = form.type.value.trim();
-        const location = form.location.value.trim();
-        const status = form.status.value.trim();
+        let erros = 0
+        const person = form.person.value.trim();
+        const equipment = form.equipment.value.trim();
+        const dt_contact = form.dt_contact.value.trim();
 
-        if (!name) {
-            form.name.style = 'border-color: #eb0000';
+        if (!person) {
+            form.person.style = 'border-color: #eb0000';
             erros += 1;
         }
-        if (!type) {
+        if (!equipment) {
             form.type.style = 'border-color: #eb0000';
             erros += 1;
         }
-        if (!location) {
-            form.location.style = 'border-color: #eb0000';
-            erros += 1;
-        }
-        if (!status) {
-            form.status.style = 'border-color: #eb0000';
+        if (!dt_contact) {
+            form.dt_contact.style = 'border-color: #eb0000';
             erros += 1;
         }
 
@@ -164,58 +162,49 @@
 
     function openAddSidebar() {
         const $sidebar = $('#sidebar');
-        const $select = $('#type');
+        const $selectPerson = $('#person'); // select de pessoas
+        const $selectEquipment = $('#equipment'); // select de equipamentos
 
-        $select.empty().append('<option value="">Selecione um tipo...</option>');
+        // limpa os selects
+        $selectPerson.empty().append('<option value="">Selecione uma pessoa...</option>');
+        $selectEquipment.empty().append('<option value="">Selecione um equipamento...</option>');
 
+        // faz uma única requisição
         $.ajax({
-            url: '/equipments/get_types',
+            url: '/waitlist/info_form',
             type: 'GET',
             dataType: 'json',
-            success: function(types) {
-                console.log(types);
-                $.each(types, function(index, type) {
-                    $select.append(`<option value="${type.id}">${type.name}</option>`);
+            success: function(data) {
+                // popula pessoas
+                $.each(data.persons, function(index, person) {
+                    $selectPerson.append(`<option value="${person.id}">${person.name}</option>`);
                 });
 
+                // popula equipamentos
+                $.each(data.equipments, function(index, equipment) {
+                    const typeLabel = equipment.type ? ` (${equipment.type})` : '';
+                    $selectEquipment.append(`<option value="${equipment.id}">${equipment.name}${typeLabel}</option>`);
+                });
+
+                // abre o sidebar depois de popular tudo
                 $sidebar.addClass('active');
             },
             error: function(xhr, status, error) {
-                console.error('Erro ao carregar tipos:', error);
+                console.error('Erro ao carregar informações do formulário:', error);
             }
         });
-        const name = document.getElementById('name');
-        const location = document.getElementById('location');
-        name.style = 'border-color: #ced4da';
-        location.style = 'border-color: #ced4da';
+
+        const person = document.getElementById('person');
+        const equipment = document.getElementById('equipment');
+        if (person) person.style = 'border-color: #ced4da';
+        if (equipment) equipment.style = 'border-color: #ced4da';
     }
 
     function closeAddSidebar() {
-        let form = $('#form-equipamento');
+        let form = $('#form-waitlist');
         resetForm(form);
 
         document.getElementById('sidebar').classList.remove('active');
-    }
-
-    function formatarCPF() {
-        const cpfInput = document.getElementById("cpf");
-        let cpf = cpfInput.value.replace(/\D/g, ''); // Remove não-números
-
-        if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
-
-        let cpfFormatado = '';
-
-        if (cpf.length > 9) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, "$1.$2.$3-$4");
-        } else if (cpf.length > 6) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{3})(\d{0,3})/, "$1.$2.$3");
-        } else if (cpf.length > 3) {
-            cpfFormatado = cpf.replace(/(\d{3})(\d{0,3})/, "$1.$2");
-        } else {
-            cpfFormatado = cpf;
-        }
-
-        cpfInput.value = cpfFormatado;
     }
 
     function handleFormOnSave() {
@@ -239,23 +228,6 @@
         $("#loading-overlay-add").hide();
         $("#btn-cancelar-add").prop("disabled", false);
         $("#btn-salvar-add").prop("disabled", false);    
-    }
-
-    function validateFormEdit(form) {
-
-        let invalid = 0;
-        const name = form.name.value.trim();
-        const location = form.location.value.trim();
-
-        if (!name) {
-            form.name.style = 'border-color: #eb0000';
-            invalid += 1;
-        }
-        if (!location) {
-            form.location.style = 'border-color: #eb0000';
-            invalid += 1;
-        }
-        return invalid;
     }
 
 </script>

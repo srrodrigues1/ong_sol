@@ -3,7 +3,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Equipamentos</title>
+    <title>Lista de Espera</title>
     <link rel="stylesheet" href="{% static 'users/css/index.css' %}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.21.0/dist/bootstrap-table.min.css">
@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{% static 'img/favicon.png' %}">
 </head>
-<body class="body-equipments">
+<body class="body-waitlist">
 
     <!-- === MODAL DE CONFIRMAÇÃO DE EXCLUSÃO ================================ -->
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel" aria-hidden="true">
@@ -42,9 +42,8 @@
     <div class="d-flex">
 
         {% include 'menu.html' %}
-        {% include 'equipments/sidebar_add.html' %}
-        {% include 'equipments/sidebar_edit.html' %}
-        {% include 'equipments/sidebar_loan.html' %}
+        {% include 'waitlist/sidebar_add.html' %}
+        {% include 'waitlist/sidebar_edit.html' %}
 
         <div id="sidebar-content"></div>
         <div id="sidebar-edit-content"></div>
@@ -52,7 +51,7 @@
         <div class="content flex-grow-1 p-4">
             <div class="container">
                 <div>
-                    <h3 class="text page-label">Equipamentos</h3>
+                    <h3 class="text page-label">Lista de Espera</h3>
                 </div>
                 <div class="d-flex justify-content-end align-items-end mb-2">
                     <button class="btn btn-add" onclick="openAddSidebar()">
@@ -62,7 +61,7 @@
                 </div>
 
                 <div id="hide-table" style="visibility: hidden">
-                    {% include 'equipments/tabela_equipamentos.html' %}
+                    {% include 'waitlist/tabela_waitlist.html' %}
                 </div>
             </div>
         </div>
@@ -89,133 +88,70 @@
     }
 
     function loadTableEvents() {
-        $('#tabela-equipamentos').bootstrapTable({
+        $('#tabela-waitlist').bootstrapTable({
             formatShowingRows: function (pageFrom, pageTo, totalRows) {
-                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> equipamentos.';
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> esperas.';
             },
             locale: 'pt-BR'
         });
 
-        $('#tabela-equipamentos').on('post-body.bs.table search.bs.table', function () {
+        $('#tabela-waitlist').on('post-body.bs.table search.bs.table', function () {
             initTooltips();
         });
 
         initTooltips();
 
         // Editar equipamento
-        $('#tabela-equipamentos').on('click', 'a.text-primary', function (event) {
+        $('#tabela-waitlist').on('click', 'a.text-primary', function (event) {
             event.preventDefault();
 
-            const equipmentId = $(this).closest('tr').data('id');
-            if (!equipmentId) return;
+            const waitlistId = $(this).closest('tr').data('id');
+            if (!waitlistId) return;
 
-            fetch(`/equipments/${equipmentId}`)
-                .then(response => response.json())
-                .then(data => {
-                    $('#sidebar-title-edit').text(data.name);
-                    $('#id_edit').val(data.id);
-                    $('#name_edit').val(data.name);
-                    $('#location_edit').val(data.location);
-                    $('#status_edit').val(data.status);
+            fetch(`/waitlist/${waitlistId}`)
+            .then(response => response.json())
+            .then(data => {
+                $('#sidebar-title-edit').text(data.name);
 
-                    // Carrega todos os tipos e marca o tipo atual como selecionado
-                    const $selectType = $('#type_edit');
-                    carregarTiposEquipamento($selectType, data.type ? data.type.id : null);
+                const $inputID = $('#id_edit');
+                const $selectPerson = $('#person_edit'); // select de pessoas
+                const $selectEquipment = $('#equipment_edit'); // select de equipamentos
+                const $inputContact = $("#dt_contact_edit");
 
-                    if (data.loaned) {
-                        $('#status-message').css('display', 'contents');
-                    } else {
-                        $('#status-message').hide();
+                $selectPerson.empty();
+                $selectEquipment.empty();
+
+                $.ajax({
+                    url: '/waitlist/info_form',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(info) {   
+                        $.each(info.persons, function(index, person) {
+                            $selectPerson.append(`<option value="${person.id}">${person.name}</option>`);
+                        });
+
+                        $.each(info.equipments, function(index, equipment) {
+                            const typeLabel = equipment.type ? ` (${equipment.type})` : '';
+                            $selectEquipment.append(`<option value="${equipment.id}">${equipment.name}${typeLabel}</option>`);
+                        });
+
+                        $inputID.val(data.id);
+                        $selectPerson.val(data.person_id);
+                        $selectEquipment.val(data.equipment_id);
+                        $inputContact.val(data.dt_contact);
+
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Erro ao carregar informações do formulário:', error);
                     }
+                });
 
-                    $('#sidebar-title').text("Editar equipamento");
-                    openEditSidebar();
-                })
-                .catch(error => console.error('Erro ao buscar dados do equipamento:', error));
+                openEditSidebar();
+            })
+            .catch(error => console.error('Erro ao buscar dados do equipamento:', error));
         });
 
-        $('#tabela-equipamentos').on('click', 'a.text-secondary', function(e) {
-            e.preventDefault();
-            const equipmentId = $(this).closest('tr').data('id');
-            if (!equipmentId) return;
-
-            fetch(`/equipments/loan/${equipmentId}`)
-                .then(response => response.json())
-                .then(data => {
-
-                    if (data.equipment.status != 2 && data.equipment.status != 1) {
-                        toastr.warning("O equipamento não pode ser emprestado devido estar com o status <b>" + obterStatus(data.equipment.status) + "<b>")
-                        return;
-                    }
-                    document.getElementById('id_loan').value = data.equipment.id;
-                    document.getElementById('name_loan').value = data.equipment.name;
-
-                    const requesterSelect = document.getElementById('requester_loan');
-                    const cpfField = document.getElementById('cpf_loan');
-                    const btnSaveLoan = document.getElementById('btn-salvar-loan');
-
-                    const dateLoanedInput = document.getElementById('dt_loaned_loan');
-                    const dateLoanedLabel = document.getElementById('dt_loaned_div');
-
-                    const dateReturnLabel = document.getElementById('dt_return_div');
-                    const dateReturnInput = document.getElementById('dt_return_loan');
-
-                    requesterSelect.innerHTML = '';
-
-                    const optEmpty = document.createElement('option');
-                    optEmpty.value = '';
-                    optEmpty.textContent = 'Selecione um solicitante';
-                    requesterSelect.appendChild(optEmpty);
-
-                    const requesterData = {};
-
-                    data.persons.forEach(p => {
-                        const opt = document.createElement('option');
-                        opt.value = p.id;
-                        opt.textContent = p.name;
-                        requesterSelect.appendChild(opt);
-
-                        requesterData[p.id] = p.cpf;
-                    });
-
-                    if (data.loan && data.loan.requester_id) {
-                        requesterSelect.value = data.loan.requester_id;
-                        cpfField.value = data.loan.requester_cpf;
-                        dateReturnLabel.style.display = "block";
-
-                        dateLoanedLabel.style.display = "contents";
-                        dateLoanedInput.value = data.loan.loan_date;
-                        dateLoanedInput.disabled = true;
-
-                        requesterSelect.disabled = true;
-                        cpfField.disabled = true;
-
-                        btnSaveLoan.textContent = 'Remover empréstimo';
-                    } else {
-                        requesterSelect.required = true;
-                        requesterSelect.disabled = false;
-                        cpfField.disabled = true;
-                        cpfField.value = '';
-                        dateReturnLabel.style.display = "none";
-                        
-                        dateLoanedLabel.style.display = "contents";
-                        dateLoanedInput.disabled = false;
-                        dateLoanedInput.setCustomValidity('');
-
-                        btnSaveLoan.textContent = 'Salvar empréstimo';
-                    }
-
-                    requesterSelect.addEventListener('change', function() {
-                        const selectedId = this.value;
-                        cpfField.value = requesterData[selectedId] || '';
-                    });
-
-                    openLoanSidebar();
-                })
-                .catch(error => console.error('Erro ao buscar dados do empréstimo:', error));
-        });
-
-        $('#tabela-equipamentos').on('click', 'a.text-danger', function (e) {
+        $('#tabela-waitlist').on('click', 'a.text-danger', function (e) {
             e.preventDefault();
 
             const $row     = $(this).closest('tr');
@@ -228,7 +164,7 @@
     }
 
     $(document).ready(function () {
-        atualizarTabelaEquipamentos();
+        atualizarTabelaWaitlist();
         $("#hide-table").css("visibility", "visible");
 
         // ---------------------------------------------------------------------
@@ -241,7 +177,7 @@
         $('#btn-confirm-delete').on('click', function () {
             if (!deleteUserId) return;
 
-            fetch(`/equipments/delete/${deleteUserId}/`, {
+            fetch(`/waitlist/delete/${deleteUserId}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}'
@@ -250,9 +186,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    toastr.success('Equipamento removido com sucesso');
+                    toastr.success('Espera removida com sucesso');
                     DELETE_MODAL.hide();
-                    atualizarTabelaEquipamentos();
+                    atualizarTabelaWaitlist();
                     deleteUserId = null;
                 } else {
                     toastr.error(data.error)
@@ -263,7 +199,7 @@
         });
 
         $('#exportar-dados').on('click', function() {
-            fetch(`/equipments/list`, {
+            fetch(`/waitlist/list`, {
                 method: 'GET'
             })
             .then(response => {
@@ -289,8 +225,8 @@
         })
     });
 
-    async function atualizarTabelaEquipamentos() {
-        const response = await fetch("{% url 'equipamentos_parciais' %}");
+    async function atualizarTabelaWaitlist() {
+        const response = await fetch("{% url 'waitlist_parciais' %}");
         const html = await response.text();
         document.querySelector("#hide-table").innerHTML = html;
 
@@ -312,30 +248,8 @@
             case 5:
                 return "Avariado"
         }
+
     }
-
-    function carregarTiposEquipamento($select, selectedId = null) {
-        $.ajax({
-            url: '/equipments/get_types',
-            type: 'GET',
-            dataType: 'json',
-            success: function(response) {
-                $select.empty(); // limpa as opções
-                response.forEach(tipo => {
-                    const option = new Option(tipo.name, tipo.id);
-                    $select.append(option);
-                });
-
-                if (selectedId) {
-                    $select.val(selectedId);
-                }
-            },
-            error: function() {
-                console.error('Erro ao carregar tipos de equipamento.');
-            }
-        });
-    }
-
 </script>
 
 </body>

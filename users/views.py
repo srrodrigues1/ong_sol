@@ -32,7 +32,6 @@ from .models import User, Role
 
 @login_required
 def index(request):
-    users = User.objects.all().order_by("id")
     return render(request, 'users/index.html', {})
 
 @login_required

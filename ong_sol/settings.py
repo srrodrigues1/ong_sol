@@ -33,6 +33,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "127.0.0.1",
     "localhost",
+    "localdocker",
     "192.168.100.226",
 ]
 
@@ -49,7 +50,8 @@ INSTALLED_APPS = [
     'simple_history',
     'login',
     'equipments',
-    'persons'
+    'persons',
+    'waitlist'
 ]
 
 MIDDLEWARE = [
@@ -93,6 +95,13 @@ DATABASES = {
         'PASSWORD': 'myuser',
         'HOST': 'db',
         'PORT': '3306',
+        'OPTIONS': {
+            'init_command': (
+                "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci', "
+                "character_set_connection=utf8mb4, "
+                "collation_connection=utf8mb4_unicode_ci"
+            ),
+        },
     }
 }
 
@@ -124,6 +133,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'pt-br'
+DEFAULT_CHARSET = 'utf-8'
+FILE_CHARSET = 'utf-8'
 
 TIME_ZONE = 'UTC'
 
