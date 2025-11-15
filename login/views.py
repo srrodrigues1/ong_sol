@@ -28,12 +28,12 @@ def logar(request):
         formated_cpf = cpf.replace('.', '')
         formated_cpf = formated_cpf.replace('-', '')
 
-        user = User.objects.filter(cpf=formated_cpf).first()
+        user = User.objects.filter(cpf=formated_cpf, status=1).first()
 
         if user:
             if check_password(password, user.password):
                 request.session['user_id'] = user.id
-                return JsonResponse({"success": True, "message": "Usuário encontrado"})
+                return JsonResponse({"success": True, "message": "Usuário logado com sucesso!"})
             else:
                 return JsonResponse({"success": False, "message": "Usuário ou senha inválidos!"})
         else:                

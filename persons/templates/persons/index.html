@@ -145,7 +145,7 @@
                         if (/\.(jpe?g|png|gif|webp)$/i.test(doc.url)) {
                             fileEl = `
                                 <div class="file-item" data-id="${doc.id}">
-                                    <button type="button" class="remove-file-btn" style="display: none;" title="Remover">
+                                    <button type="button" class="remove-file-btn" style="display: none; z-index: 1;" title="Remover">
                                         <i class="bi bi-x-lg"></i>
                                     </button>
                                     <a href="${doc.url}" target="_blank">

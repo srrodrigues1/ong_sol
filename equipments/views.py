@@ -32,7 +32,7 @@ def login_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped_view
 
-from .models import Equipment, Loans
+from .models import Equipment, Loans, Type
 from persons.models import Person
 
 @login_required
@@ -43,14 +43,19 @@ def index(request):
 def criar_equipamento(request):
     if request.method == 'POST':
         name = request.POST.get('name')
-        type = request.POST.get('type')
+        type_id = request.POST.get('type')
         location = request.POST.get('location')
         status = request.POST.get('status')
+
+        try:
+            type_obj = Type.objects.get(id=type_id)
+        except Type.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Tipo inválido.'}, status=400)
 
         erros = {}
         Equipment.objects.create(
             name=name,
-            type=type,
+            type=type_obj,
             location=location,
             status=status
         )
@@ -59,7 +64,7 @@ def criar_equipamento(request):
 
 @login_required
 def equipamentos_parciais(request):
-    equipments = Equipment.objects.prefetch_related("loans__requester").order_by("id")
+    equipments = Equipment.objects.prefetch_related("loans__requester", "type").order_by("id")
 
     days_loaned = None
     equipamentos_com_requester = []
@@ -74,6 +79,7 @@ def equipamentos_parciais(request):
         equipamentos_com_requester.append({
             "id": eq.id,
             "name": eq.name,
+            "type": eq.type.name if eq.type else "",
             "requester": requester_name,
             "location": eq.location,
             "status": eq.status,
@@ -88,22 +94,24 @@ def equipamentos_parciais(request):
 @login_required
 def dados_equipamento(request, equipment_id):
     try:
-        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+        equipment = Equipment.objects.prefetch_related("loans__requester", "type").get(id=equipment_id)
 
-        loaned = False
         loan = equipment.loans.filter(status=1, return_date__isnull=True).first()
-        if loan:
-            loaned = True
+        loaned = loan is not None
 
         data = {
             'id': equipment.id,
             'name': equipment.name,
-            'type': equipment.type,
+            'type': {
+                'id': equipment.type.id,
+                'name': equipment.type.name
+            } if equipment.type else None,
             'location': equipment.location,
             'loaned': loaned,
             'status': equipment.status,
-            'create_date': equipment.create_date
+            'create_date': equipment.create_date.strftime('%d/%m/%Y %H:%M'),
         }
+
         return JsonResponse(data)
 
     except Equipment.DoesNotExist:
@@ -114,7 +122,7 @@ def dados_equipamento(request, equipment_id):
 def atualizar_equipamento(request, equipment_id):
     if request.method == 'POST':
         name = request.POST.get('name')
-        type = request.POST.get('type')
+        type_id = request.POST.get('type')
         location = request.POST.get('location')
         status = request.POST.get('status')
 
@@ -122,8 +130,8 @@ def atualizar_equipamento(request, equipment_id):
 
         if name:
             equipment.name = name
-        if type:
-            equipment.type = type
+        if type_id:
+            equipment.type = Type.objects.get(id=type_id)
         if location:        
             equipment.location = location
         if status:
@@ -198,7 +206,7 @@ def fazer_emprestimo(request, equipment_id):
 
 def dados_emprestimo(request, equipment_id):
     try:
-        equipment = Equipment.objects.prefetch_related("loans__requester").get(id=equipment_id)
+        equipment = Equipment.objects.prefetch_related("loans__requester", "type").get(id=equipment_id)
 
         loan = equipment.loans.filter(status=1, return_date__isnull=True).first()
         requester_id = loan.requester.id if loan else None
@@ -213,7 +221,10 @@ def dados_emprestimo(request, equipment_id):
             "equipment": {
                 "id": equipment.id,
                 "name": equipment.name,
-                "type": equipment.type,
+                'type': {
+                    'id': equipment.type.id,
+                    'name': equipment.type.name
+                } if equipment.type else None,
                 "location": equipment.location,
                 "status": equipment.status,
                 "create_date": equipment.create_date,
@@ -271,3 +282,13 @@ def remover_emprestimo(request, equipment_id):
     except Exception as e:
         return JsonResponse({'error': f'Erro ao remover empréstimo: {str(e)}'}, status=500)
 
+@login_required
+def obter_tipos_equipamento(request):
+    types = Type.objects.all().values('id', 'name')
+    response = JsonResponse(
+        list(types),
+        safe=False,
+        json_dumps_params={'ensure_ascii': False}
+    )
+    response['Content-Type'] = 'application/json; charset=utf-8'
+    return response

@@ -1,0 +1,53 @@
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'waitlist/css/index.css' %}">
+
+<table id="tabela-waitlist"
+    class="table table-hover table-bordered table-striped align-middle table-sm"
+    data-toggle="table"
+    data-pagination="true"
+    data-search="true"
+    data-show-loading="true"
+    data-page-list="[10]"
+    data-locale="pt-BR"
+    data-id-field="id"
+    data-unique-id="id">
+    <thead class="table-light">
+        <tr>
+            <th data-field="person_name" class="td-truncate" data-width="60" data-sortable="true">Nome</th>
+            <th data-field="equipment_name" class="td-truncate" data-width="40" data-sortable="true">Item desejado</th>
+            <th data-field="person_phone" class="td-truncate" data-width="30" data-sortable="true">Telefone</th>
+            <th data-field="dt_contact" class="td-truncate" data-width="30" data-sortable="true">Dt. Contato</th>
+            <th data-field="create_date" class="td-truncate" data-width="30" data-sortable="true">Dt. Criação</th>
+            <th data-field="acoes" style="text-align: center" class="td-truncate" data-width="27">Ações</th>
+        </tr>
+    </thead>
+
+    <tbody id="waitlist-body">
+        {% for waitlist in waitlists %}
+        <tr data-id="{{ waitlist.id }}">
+            <td class="waitlist-row td-truncate" title="{{ waitlist.person_name }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ waitlist.person_name }}</td>
+            <td class="waitlist-row td-truncate" title="{{ waitlist.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ waitlist.equipment_name }}</td>
+            <td class="waitlist-row td-truncate" title="({{ waitlist.ddd }}) {{ waitlist.person_phone }}" data-bs-toggle="tooltip" data-bs-placement="top">({{ waitlist.person_ddd }}) {{ waitlist.person_phone }}</td>
+            <td title="{{ waitlist.dt_contact }}" data-bs-toggle="tooltip">{{ waitlist.dt_contact }}</td>
+            <td title="{{ waitlist.create_date }}" data-bs-toggle="tooltip">{{ waitlist.create_date }}</td>
+            <td style="text-align: center">
+                <a href="#" class="text-primary me-2"><i class="fa fa-eye"></i></a>
+                <a href="#" class="text-danger btn-excluir" data-id="{{ waitlist.id }}"><i class="fa fa-trash"></i></a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+
+    $(document).ready(function() {
+        $('#tabela-waitlist').bootstrapTable({
+            formatShowingRows: function (pageFrom, pageTo, totalRows) {
+                return 'Mostrando <b>' + pageFrom + '-' + pageTo + '</b> de <b>' + totalRows + '</b> pessoas em espera.';
+            }
+        });
+    });
+
+</script>

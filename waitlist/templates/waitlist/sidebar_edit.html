@@ -15,7 +15,7 @@
         <div class="sidebar-header">
             <h4 id="sidebar-title-edit" class="sidebar-title"></h4>
             <div id="options-holder" class="d-flex gap-3">
-                <a id="sidebar-btn-edit" onclick="makeFormEditable()" href="#">Editar equipamento</a>
+                <a id="sidebar-btn-edit" onclick="makeFormEditable()" href="#">Editar Espera</a>
                 <!-- <a id="sidebar-btn-history" href="#">Visualizar histórico</a> -->
             </div>
         </div>
@@ -27,37 +27,25 @@
         <div id="mensagem-usuario"></div>
         
         <div class="sidebar-body">
-            <form id="form-equipamento-edit" class="form-usuario" method="post">
+            <form id="form-waitlist-edit" class="form-usuario" method="post">
                 {% csrf_token %}
                 <div style="display: none;">
                     <label for="id_edit" class="form-label">Id</label>
                     <input type="text" class="form-control" disabled id="id_edit" name="id">
                 </div>
-                <div class="">
-                    <label for="name_edit" class="form-label">Nome</label>
-                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="name_edit" placeholder="Nome" name="name">
+                <div class="mb-2">
+                    <label for="person_edit" class="form-label">Nome</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" id="person_edit" disabled name="person_edit">
+                    </select>
                 </div>
                 <div class="mb-2">
-                    <label for="type_edit" class="form-label">Tipo</label>
-                    <select onchange="removeRequiredStyle(this)" class="form-select" disabled id="type_edit" name="type_edit">
+                    <label for="equipment_edit" class="form-label">Item desejado</label>
+                    <select onchange="removeRequiredStyle(this)" class="form-select" id="equipment_edit" disabled name="equipment_edit">
                     </select>
                 </div>
-                <div class="">
-                    <label for="location_edit" class="form-label">Localização</label>
-                    <input type="text" onkeydown="removeRequiredStyle(this)" class="form-control" disabled id="location_edit" placeholder="Localização" name="location">
-                </div>
-
-                <div class="">
-                    <label for="status_edit" class="form-label">Status</label>
-                    <select onchange="removeRequiredStyle(this)" class="form-select" id="status_edit" disabled name="status">
-                        <option value="1" selected>Ativo</option>
-                        <option value="0">Inativo</option>
-                        <option value="2">Emprestado</option>
-                        <option value="3">Em conserto</option>
-                        <option value="4">Extraviado</option>
-                        <option value="5">Avariado</option>
-                    </select>
-                    <label id="status-message" class="float-start" style="font-size: 11px; color: #ff0000; display: none;">Campos desabilitados pois o equipamento se encontra emprestado!</label>
+                <div class="mb-2" id="dt_contact_div_edit">
+                    <label for="dt_contact_edit" class="form-label">Data que entrou em contato</label>
+                    <input type="text" onkeyup="removeRequiredStyle(this)" class="form-control" id="dt_contact_edit" placeholder="dd/mm/aaaa" disabled name="dt_contact_edit" maxlength="10">
                 </div>
 
                 <div class="form-buttons d-flex justify-content-end">
@@ -82,7 +70,22 @@
 
     let savedValues = {};
 
-    document.getElementById('form-equipamento-edit').addEventListener('submit', function(e) {
+    document.getElementById('dt_contact_edit').addEventListener('input', function (e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 8) value = value.slice(0, 8);
+
+        let formatted = '';
+        if (value.length > 4) {
+            formatted = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+        } else if (value.length > 2) {
+            formatted = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+        } else {
+            formatted = value;
+        }
+        e.target.value = formatted;
+    });
+
+    document.getElementById('form-waitlist-edit').addEventListener('submit', function(e) {
         e.preventDefault();
         const form = e.target;
         handleFormOnSave();
@@ -95,7 +98,7 @@
         const formData = new FormData(form);
         let userId = $("#id_edit").val();
 
-        const url = `/equipments/update/${userId}/`;
+        const url = `/waitlist/update/${userId}/`;
         fetch(url, {
             method: 'POST',
             headers: {
@@ -118,7 +121,7 @@
             if (data.success) {
                 form.reset();
                 toastr.success(data.success);
-                atualizarTabelaEquipamentos();
+                atualizarTabelaWaitlist();
                 makeFormNonEditable();
                 closeEditSidebar();
             } else if (data.error) {
@@ -144,10 +147,9 @@
     function resetFormEdit(form) {
         form.find("input[type=text], textarea").val("");
         form.find("select").prop("selectedIndex", 0);
-        $("#name_edit").css("border-color", "#ced4da");
-        $("#type_edit").css("border-color", "#ced4da");
-        $("#location_edit").css("border-color", "#ced4da");
-        $("#status_edit").css("border-color", "#ced4da");
+        $("#person_edit").css("border-color", "#ced4da");
+        $("#equipment_edit").css("border-color", "#ced4da");
+        $("#dt_contact_edit").css("border-color", "#ced4da");
     }    
 
     function openEditSidebar() {
@@ -155,7 +157,7 @@
     }
 
     function closeEditSidebar() {
-        let form = $('#form-equipamento-edit');
+        let form = $('#form-waitlist-edit');
         resetFormEdit(form);
 
         document.getElementById('sidebar-edit').classList.remove('active');
@@ -184,44 +186,36 @@
 
     function makeFormEditable() {
         let loaned = $("#status-message");
-        savedValues.name = $("#name_edit").val();
-        savedValues.type = $("#type_edit").val();
-        savedValues.location = $("#location_edit").val();
-        savedValues.status = $("#status_edit").val();
+        savedValues.person = $("#person_edit").val();
+        savedValues.equipment = $("#equipment_edit").val();
+        savedValues.dt_contact = $("#dt_contact_edit").val();
         
         $("#btn-cancelar-edit-save").show();
         $("#btn-cancelar-edit-cancel").show();
         $("#btn-cancelar-edit").hide();
         
-        let form = $('#form-equipamento-edit')
-        $("#location_edit").prop("disabled", false);
-        if (loaned.css("display") != "contents") {
-            $("#status_edit").prop("disabled", false);
-            $("#name_edit").prop("disabled", false);
-            $("#type_edit").prop("disabled", false);
-        }
+        let form = $('#form-waitlist-edit')
+        $("#person_edit").prop("disabled", false);
+        $("#equipment_edit").prop("disabled", false);
+        $("#dt_contact_edit").prop("disabled", false);
         $("#options-holder").css("visibility", "hidden");
     }
 
     function makeFormNonEditable() {
-        $("#password-strenght").hide();
         $("#btn-cancelar-edit-save").hide();
         $("#btn-cancelar-edit-cancel").hide();
         $("#btn-cancelar-edit").show();
 
-        let form = $('#form-equipamento-edit')
+        let form = $('#form-waitlist-edit')
         form.find("input[type=text], input[type=password], input[type=email], textarea").prop("disabled", true);
         form.find("select").prop("disabled", true);
-        $("#name_edit").prop("disabled", true);
-        $("#type_edit").prop("disabled", true);
-        $("#location_edit").prop("disabled", true);
-        $("#status_edit").prop("disabled", true);
-        $("#name_edit").val(this.name);
+        $("#person_edit").prop("disabled", true);
+        $("#equipment_edit").prop("disabled", true);
+        $("#dt_contact_edit").prop("disabled", true);
 
-        $("#name_edit").val(savedValues.name);
-        $("#type_edit").val(savedValues.type);
-        $("#location_edit").val(savedValues.location);
-        $("#status_edit").val(savedValues.status);
+        $("#person_edit").val(savedValues.person);
+        $("#equipment_edit").val(savedValues.equipment);
+        $("#dt_contact_edit").val(savedValues.dt_contact);
 
         $("#options-holder").css("visibility", "visible");
     }
@@ -229,15 +223,20 @@
     function validateFormEdit(form) {
 
         let invalid = 0;
-        const name_edit = form.name_edit.value.trim();
-        const location_edit = form.location_edit.value.trim();
+        const person_edit = form.person_edit.value.trim();
+        const equipment_edit = form.equipment_edit.value.trim();
+        const dt_contact_edit = form.dt_contact_edit.value.trim();
 
-        if (!name_edit) {
-            form.name_edit.style = 'border-color: #eb0000';
+        if (!person_edit) {
+            form.person_edit.style = 'border-color: #eb0000';
             invalid += 1;
         }
-        if (!location_edit) {
-            form.location_edit.style = 'border-color: #eb0000';
+        if (!equipment_edit) {
+            form.person_edit.style = 'border-color: #eb0000';
+            invalid += 1;
+        }
+        if (!dt_contact_edit) {
+            form.dt_contact_edit.style = 'border-color: #eb0000';
             invalid += 1;
         }
         return invalid;
