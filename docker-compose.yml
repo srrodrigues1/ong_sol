@@ -1,31 +1,72 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: ong_sol
-      MYSQL_USER: myuser
-      MYSQL_PASSWORD: myuser
-    ports:
-      - "3306:3306"
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/conf/my.cnf:/etc/mysql/conf.d/my.cnf
+    networks:
+      - backend
+
 
   web:
     build: .
-    command: ./wait-for-it.sh db:3306 -- python manage.py runserver 0.0.0.0:8080
-    volumes:
-      - .:/app
-      - ./wait-for-it.sh:/wait-for-it.sh
-    working_dir: /app
-    ports:
-      - "8080:8080"
+    container_name: django
+    restart: always
     depends_on:
       - db
+    env_file:
+      - .env
+    environment:
+      DJANGO_DEBUG: 'False'
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    volumes:
+      - .:/app
+      - static_volume:/static
+      - ./media:/protected_media
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/static
+      - ./media:/protected_media
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    depends_on:
+      - web
+    networks:
+      - backend
+
+  certbot:
+    image: certbot/cerbot
+    container_name: certbot
+    volumes:
+      - ./certbot/www:var/www/cerbot
+      - ./certbot/conf:/etc/letsencrypt
 
 volumes:
   db_data:
+  static_volume:
+  protected_media:
 
+networks:
+  backend:

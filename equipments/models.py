@@ -3,14 +3,12 @@ from simple_history.models import HistoricalRecords
 
 from persons.models import Person
 
+class Type(models.Model):
+    name = models.CharField(max_length=50)
+
 class Equipment(models.Model):
     name = models.CharField(max_length=50)
-    TYPE_CHOICES = [
-        (0, 'Cadeira de Rodas'),
-        (1, 'Muletas'),
-        (2, 'Cama Hospitalar'),
-    ]
-    type = models.IntegerField(choices=TYPE_CHOICES)
+    type = models.ForeignKey(Type, on_delete=models.PROTECT, related_name='equipments')
     create_date = models.DateTimeField(auto_now_add=True)
     STATUS_CHOICES = [
         (0, 'Inativo'),
@@ -41,3 +39,4 @@ class Loans(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} - {self.requester}"
+    

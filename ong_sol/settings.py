@@ -12,29 +12,22 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import logging
-
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/protected_media/'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_pqw4_+ye0if3&@3c(kh%lnss^h)b1bnld*wuk3jm^s0-f*x89'
+DEBUG = os.getenv("DJANGO_DEBUG", "False") == "True"
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "unsafe-secret")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = [
-    "127.0.0.1",
-    "localhost",
-    "192.168.100.226",
-]
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "").split(",")
 
 # Application definition
 
@@ -49,7 +42,8 @@ INSTALLED_APPS = [
     'simple_history',
     'login',
     'equipments',
-    'persons'
+    'persons',
+    'waitlist'
 ]
 
 MIDDLEWARE = [
@@ -88,11 +82,18 @@ WSGI_APPLICATION = 'ong_sol.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ong_sol',
-        'USER': 'myuser',
-        'PASSWORD': 'myuser',
-        'HOST': 'db',
-        'PORT': '3306',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
+        'OPTIONS': {
+            'init_command': (
+                "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_unicode_ci', "
+                "character_set_connection=utf8mb4, "
+                "collation_connection=utf8mb4_unicode_ci"
+            ),
+        },
     }
 }
 
@@ -124,6 +125,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
 LANGUAGE_CODE = 'pt-br'
+DEFAULT_CHARSET = 'utf-8'
+FILE_CHARSET = 'utf-8'
 
 TIME_ZONE = 'UTC'
 
@@ -136,7 +139,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',  # sua pasta com arquivos adicionais
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

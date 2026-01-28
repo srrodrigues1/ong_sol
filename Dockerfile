@@ -1,6 +1,8 @@
 # Dockerfile
 FROM python:3.11-slim
 
+WORKDIR /app
+
 # Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
@@ -10,12 +12,15 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install -r ./requirements.txt
+RUN pip install -r ./requirements.txt  
 
 COPY . .
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
+EXPOSE 8000
+
+ENTRYPOINT ["/entrypoint.sh"]

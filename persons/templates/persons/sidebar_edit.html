@@ -170,6 +170,7 @@
                 form.reset();
                 toastr.success(data.success);
                 atualizarTabelaPessoas();
+                makeFormNonEditable();
                 closeEditSidebar();
             } else if (data.error) {
                 let listaErros = '';
@@ -407,6 +408,8 @@
         const fileItem = $(this).closest('.file-item');
         fileItem.addClass('removed').hide();
     });
+
+    makeFormNonEditable();
 
 </script>
 </body>

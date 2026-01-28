@@ -1,0 +1,11 @@
+[
+  { "model": "equipments.type", "pk": 1, "fields": { "name": "Bengala" } },
+  { "model": "equipments.type", "pk": 2, "fields": { "name": "Tipóia de joelho" } },
+  { "model": "equipments.type", "pk": 3, "fields": { "name": "Órtese de pé" } },
+  { "model": "equipments.type", "pk": 4, "fields": { "name": "Bota ortopédica" } },
+  { "model": "equipments.type", "pk": 5, "fields": { "name": "Muleta de braço" } },
+  { "model": "equipments.type", "pk": 6, "fields": { "name": "Colete pequeno" } },
+  { "model": "equipments.type", "pk": 7, "fields": { "name": "Cadeira de banho" } },
+  { "model": "equipments.type", "pk": 8, "fields": { "name": "Cadeira de rodas" } }
+]
+

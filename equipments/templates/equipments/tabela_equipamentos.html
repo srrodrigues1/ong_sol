@@ -30,13 +30,7 @@
         <tr data-id="{{ equipment.id }}">
             <td class="equipment-row td-truncate" title="{{ equipment.name }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.name }}</td>
              <td>
-                {% if equipment.type == 0 %}
-                    <div title="Cadeira de Rodas" data-bs-toggle="tooltip">Cadeira de Rodas</div>
-                {% elif equipment.type == 1 %}
-                    <div title="Muletas" data-bs-toggle="tooltip">Muletas</div>
-                {% else %}
-                    <div title="Cama Hospitalar" data-bs-toggle="tooltip">Cama Hospitalar</div>
-                {% endif %}
+                <div title="{{ equipment.type }}" data-bs-toggle="tooltip">{{ equipment.type }}</div>
             </td>
             <td class="equipment-row td-truncate" title="{{ equipment.location }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.location }}</td>
             <td class="equipment-row td-truncate" title="{{ equipment.requester }}" data-bs-toggle="tooltip" data-bs-placement="top">{{ equipment.requester }}</td>
